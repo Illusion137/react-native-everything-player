@@ -1,0 +1,36 @@
+{
+	"name": "react-native-everything-player",
+	"version": "1.0.0",
+	"description": "React Native Everything Player",
+	"scripts": {
+		"test": "jest",
+		"typecheck": "tsc"
+	},
+	"keywords": [
+		"react native",
+		"react",
+		"native",
+		"track",
+		"player",
+		"media",
+		"audio",
+		"video",
+		"sabr"
+	],
+	"homepage": "https://github.com/Illusion137/react-native-everything-player#readme",
+	"bugs": {
+		"url": "https://github.com/Illusion137/react-native-everything-player/issues"
+	},
+	"repository": "git+https://github.com/Illusion137/react-native-everything-player.git",
+	"license": "ISC",
+	"author": "Sumi!",
+	"type": "commonjs",
+	"main": "src/index.ts",
+	"directories": {
+		"doc": "docs"
+	},
+	"dependencies": {
+		"react-native": "^0.83.1",
+		"typescript-eslint": "^8.54.0"
+	}
+}
