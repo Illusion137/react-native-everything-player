@@ -1,0 +1,133 @@
+buildscript {
+  ext.getExtOrDefault = {name ->
+    return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties['EverythingPlayer_' + name]
+  }
+
+  repositories {
+    google()
+    mavenCentral()
+  }
+
+  dependencies {
+    classpath "com.android.tools.build:gradle:8.7.2"
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${getExtOrDefault('kotlinVersion')}"
+  }
+}
+
+apply plugin: "com.android.library"
+apply plugin: "org.jetbrains.kotlin.android"
+
+apply from: '../nitrogen/generated/android/EverythingPlayer+autolinking.gradle'
+
+def getExtOrIntegerDefault(name) {
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties["EverythingPlayer_" + name]).toInteger()
+}
+
+android {
+  namespace "com.everythingplayer"
+
+  compileSdk getExtOrIntegerDefault("compileSdkVersion")
+
+  defaultConfig {
+    minSdk = getExtOrIntegerDefault("minSdkVersion")
+    targetSdk = getExtOrIntegerDefault("targetSdkVersion")
+
+    externalNativeBuild {
+      cmake {
+        arguments "-DANDROID_STL=c++_shared", "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+      }
+    }
+  }
+
+  buildFeatures {
+    buildConfig true
+    prefab true
+  }
+
+  buildTypes {
+    release {
+      minifyEnabled false
+    }
+  }
+
+  lintOptions {
+    disable "GradleCompatible"
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
+  }
+
+  kotlinOptions {
+    jvmTarget = "1.8"
+  }
+
+  sourceSets {
+    main {
+      java.srcDirs += [
+        "src/main/java",
+        "generated/java",
+        "generated/jni"
+      ]
+      jni.srcDirs += [
+        "generated/jni"
+      ]
+    }
+  }
+
+  externalNativeBuild {
+    cmake {
+      path "CMakeLists.txt"
+    }
+  }
+}
+
+repositories {
+  mavenCentral()
+  google()
+}
+
+def kotlin_version = getExtOrDefault("kotlinVersion")
+
+dependencies {
+  implementation "com.facebook.react:react-android:0.85.1"
+  implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
+  // Nitro Modules
+  implementation project(':react-native-nitro-modules')
+
+  // AndroidX
+  implementation "androidx.core:core-ktx:1.13.1"
+  implementation "androidx.localbroadcastmanager:localbroadcastmanager:1.1.0"
+  implementation "androidx.lifecycle:lifecycle-process:2.8.6"
+  implementation 'androidx.media:media:1.7.0'
+  implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
+  implementation("androidx.activity:activity-compose:1.9.3")
+
+  // Media3 / ExoPlayer
+  implementation("androidx.media3:media3-exoplayer:1.8.0")
+  implementation("androidx.media3:media3-session:1.8.0")
+  implementation("androidx.media3:media3-ui:1.8.0")
+  implementation("androidx.media3:media3-exoplayer-hls:1.8.0")
+  implementation("androidx.media3:media3-exoplayer-dash:1.8.0")
+  implementation("androidx.media3:media3-exoplayer-smoothstreaming:1.8.0")
+  implementation("androidx.media3:media3-common:1.8.0")
+  implementation("androidx.media3:media3-datasource-okhttp:1.8.0")
+
+  // Utilities
+  implementation "com.google.guava:guava:33.0.0-android"
+  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.8.0"
+  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"
+  implementation 'io.coil-kt:coil:2.4.0'
+  api 'com.jakewharton.timber:timber:5.0.1'
+
+  // Media3 database (for SimpleCache)
+  implementation("androidx.media3:media3-database:1.8.0")
+
+  // OkHttp for SABR
+  implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+
+  // Protobuf for SABR
+  implementation 'com.google.protobuf:protobuf-kotlin-lite:4.26.1'
+}

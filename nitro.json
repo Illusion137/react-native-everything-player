@@ -1,0 +1,16 @@
+{
+  "cxxNamespace": ["everythingplayer"],
+  "ios": {
+    "iosModuleName": "EverythingPlayer"
+  },
+  "android": {
+    "androidNamespace": ["com", "everythingplayer"],
+    "androidCxxLibName": "EverythingPlayer"
+  },
+  "autolinking": {
+    "NativeEverythingPlayer": {
+      "ios": { "language": "swift", "implementationClassName": "HybridEverythingPlayer" },
+      "android": { "language": "kotlin", "implementationClassName": "HybridEverythingPlayer" }
+    }
+  }
+}

@@ -1,10 +1,21 @@
 {
 	"name": "react-native-everything-player",
 	"version": "1.0.0",
-	"description": "React Native Everything Player",
+	"description": "React Native Everything Player — Nitro Modules audio player with SABR, DRM, crossfade, and track trimming",
 	"scripts": {
-		"test": "jest",
-		"typecheck": "tsc"
+		"clean": "rm -rf dist",
+		"typecheck": "tsc",
+		"build:nitro": "nitrogen",
+		"build:ts": "tsc -p tsconfig.build.json",
+		"build": "yarn clean && yarn build:nitro && yarn build:ts",
+		"prepack": "yarn build",
+		"check:ios": "pod lib lint --allow-warnings",
+		"check:android": "cd example/android && ./gradlew :react-native-everything-player:compileDebugKotlin",
+		"check": "yarn typecheck && yarn check:ios",
+		"nitrogen": "nitrogen",
+		"lint": "eslint . --fix",
+		"prettier": "prettier --write \"**/*.ts\"",
+		"compile": "npx prettier --write \"**/*.ts\" && eslint . --fix && tsc"
 	},
 	"keywords": [
 		"react native",
@@ -14,7 +25,6 @@
 		"player",
 		"media",
 		"audio",
-		"video",
 		"sabr"
 	],
 	"homepage": "https://github.com/Illusion137/react-native-everything-player#readme",
@@ -22,15 +32,51 @@
 		"url": "https://github.com/Illusion137/react-native-everything-player/issues"
 	},
 	"repository": "git+https://github.com/Illusion137/react-native-everything-player.git",
-	"license": "ISC",
+	"license": "MIT",
 	"author": "Sumi!",
 	"type": "commonjs",
-	"main": "src/index.ts",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"react-native": "src/index.tsx",
+	"files": [
+		"dist",
+		"src",
+		"android",
+		"ios",
+		"nitrogen",
+		"nitro.json",
+		"react-native-everything-player.podspec",
+		"README.md"
+	],
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		}
+	},
 	"directories": {
 		"doc": "docs"
 	},
 	"dependencies": {
-		"react-native": "^0.83.1",
-		"typescript-eslint": "^8.54.0"
+		"react-native": "^0.85.1",
+		"react-native-nitro-modules": "^0.35.0",
+		"typescript-eslint": "^8.58.2"
+	},
+	"devDependencies": {
+		"@eslint/js": "^10.0.1",
+		"@types/react": "^19.2.14",
+		"eslint": "^10.2.0",
+		"globals": "^17.5.0",
+		"nitrogen": "^0.35.0",
+		"typescript": "^6.0.2"
+	},
+	"nitro": {
+		"ios": {
+			"iosModuleName": "EverythingPlayer"
+		},
+		"android": {
+			"androidNamespace": "com.everythingplayer",
+			"androidCxxLibName": "EverythingPlayer"
+		}
 	}
 }

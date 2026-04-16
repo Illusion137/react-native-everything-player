@@ -9,16 +9,10 @@ export default [
 	{ ignores: ["babel.config.js", "eslint.config.mjs", "jest.config.js", "./origin/src/youtube_dl/PATCH/sax/sax.js", "./origin/src/manga_reader/deob.js", "./origin/src/manga_reader/deob2.js", ".expo", "node_modules", "lib-origin", "scripts", "public", "patches", "ios", "c_sources", "assets", ".vscode"] },
 	pluginJs.configs.recommended,
 	...tseslint.configs.all,
-	{
-		languageOptions: {
-			parserOptions: {
-				projectService: true,
-				tsconfigRootDir: import.meta.dirname
-			}
-		}
-	},
+	{ languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname } } },
 	{
 		rules: {
+			"@typescript-eslint/unbound-method": "off",
 			"@typescript-eslint/no-redundant-type-constituents": "off",
 			"@typescript-eslint/no-empty-function": "off",
 			"@typescript-eslint/strict-void-return": "off",
@@ -46,32 +40,7 @@ export default [
 			"@typescript-eslint/restrict-template-expressions": "off",
 			"@typescript-eslint/no-magic-numbers": "off",
 			"@typescript-eslint/explicit-module-boundary-types": "off",
-			"@typescript-eslint/naming-convention": [
-				"off",
-				{
-					selector: "default",
-					format: ["snake_case"]
-				},
-				{
-					selector: ["variable", "classProperty"],
-					format: ["snake_case", "UPPER_CASE"],
-					leadingUnderscore: "allow"
-				},
-				{
-					selector: "function",
-					format: ["snake_case"],
-					leadingUnderscore: "allow"
-				},
-				{
-					selector: "typeLike",
-					format: ["PascalCase"],
-					leadingUnderscore: "allow"
-				},
-				{
-					selector: "enumMember",
-					format: ["UPPER_CASE"]
-				}
-			],
+			"@typescript-eslint/naming-convention": ["off", { selector: "default", format: ["snake_case"] }, { selector: ["variable", "classProperty"], format: ["snake_case", "UPPER_CASE"], leadingUnderscore: "allow" }, { selector: "function", format: ["snake_case"], leadingUnderscore: "allow" }, { selector: "typeLike", format: ["PascalCase"], leadingUnderscore: "allow" }, { selector: "enumMember", format: ["UPPER_CASE"] }],
 			"@typescript-eslint/explicit-function-return-type": "off",
 			"@typescript-eslint/prefer-readonly-parameter-types": "off", // I should maybe enable this
 			"@typescript-eslint/no-non-null-assertion": "off",

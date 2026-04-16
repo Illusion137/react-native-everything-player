@@ -1,1 +1,8 @@
+.gradle
 node_modules
+android/.cxx
+android/.gradle
+android/.kotlin
+android/build
+dist
+plans
