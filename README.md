@@ -7,3 +7,17 @@ This is just a hacky solution for [RNTPvE](https://github.com/Illusion137/RNTPvE
 
 It has a very similar API to `react-native-track-player` so I'd just use that for documentation, this is really just a published internal libary for [Illusi](https://github.com/Illusion137/Illusi) and [Origin](https://github.com/Illusion137/lib-origin).\
 Feel free to use those repositories as a kind of documentation?
+
+## Installation
+
+### Yarn
+
+```bash
+yarn add react-native-everything-player
+```
+
+### NPM
+
+```bash
+npm install react-native-everything-player
+```

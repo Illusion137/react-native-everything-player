@@ -1,6 +1,6 @@
 {
 	"name": "react-native-everything-player",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "React Native Everything Player — Nitro Modules audio player with SABR, DRM, crossfade, and track trimming",
 	"scripts": {
 		"clean": "rm -rf dist",
@@ -31,7 +31,10 @@
 	"bugs": {
 		"url": "https://github.com/Illusion137/react-native-everything-player/issues"
 	},
-	"repository": "git+https://github.com/Illusion137/react-native-everything-player.git",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/Illusion137/react-native-everything-player.git"
+	},
 	"license": "MIT",
 	"author": "Sumi!",
 	"type": "commonjs",
@@ -41,12 +44,24 @@
 	"files": [
 		"dist",
 		"src",
-		"android",
-		"ios",
-		"nitrogen",
+		"android/src",
+		"android/generated",
+		"android/CMakeLists.txt",
+		"android/build.gradle",
+		"android/gradle.properties",
+		"ios/EverythingPlayer-Bridging-Header.h",
+		"ios/EverythingPlayer.h",
+		"ios/EverythingPlayer.mm",
+		"ios/EverythingPlayer.swift",
+		"ios/Models",
+		"ios/Support",
+		"ios/SwiftAudioEx",
+		"ios/Utils",
+		"nitrogen/generated",
 		"nitro.json",
 		"react-native-everything-player.podspec",
-		"README.md"
+		"README.md",
+		"LICENSE"
 	],
 	"exports": {
 		".": {
