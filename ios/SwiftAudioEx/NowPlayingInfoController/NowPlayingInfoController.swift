@@ -8,7 +8,7 @@
 import Foundation
 import MediaPlayer
 
-public class NowPlayingInfoController: NowPlayingInfoControllerProtocol {
+class NowPlayingInfoController: NowPlayingInfoControllerProtocol {
     private var infoQueue: DispatchQueueType = DispatchQueue(
         label: "NowPlayingInfoController.infoQueue",
         attributes: .concurrent

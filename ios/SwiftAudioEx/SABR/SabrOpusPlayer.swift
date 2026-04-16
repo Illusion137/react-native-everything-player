@@ -1,6 +1,5 @@
 import AVFoundation
 // In SPM builds, libopus lives in the separate Copus module; import it explicitly.
-// In CocoaPods builds, the C symbols are bridged via the pod's umbrella header automatically.
 #if canImport(Copus)
 import Copus
 #endif
@@ -8,7 +7,7 @@ import Copus
 /// Plays a YouTube SABR audio stream using the WebM/Opus pipeline.
 ///
 /// Uses `EBMLParser` to extract Opus packets from fWebM chunks, decodes them
-/// with libopus (via the vendored Copus C target), and schedules PCM buffers on
+/// with libopus (via the vendored Copus C sources), and schedules PCM buffers on
 /// `AVAudioPlayerNode`. Stops scheduling at the exact Opus frame boundary where
 /// `blockTimestampMs >= durationMs`, eliminating the silent tail that AVFoundation's
 /// fMP4 pipeline cannot suppress.

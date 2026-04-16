@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "skipLibCheck": true,
+    "types": ["react", "react-native"],
+    "lib": ["ESNext"],
+    "paths": {
+      "react-native-everything-player": ["../src/index"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"]
+}

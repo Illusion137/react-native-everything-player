@@ -8,14 +8,14 @@
 import Foundation
 import AVFoundation
 
-public enum InterruptionType: Equatable {
+enum InterruptionType: Equatable {
     case began
     case ended(shouldResume: Bool)
 }
 
 #if os(iOS)
 
-public protocol AudioSessionControllerDelegate: AnyObject {
+protocol AudioSessionControllerDelegate: AnyObject {
     func handleInterruption(type: InterruptionType)
 }
 
@@ -23,7 +23,7 @@ public protocol AudioSessionControllerDelegate: AnyObject {
  Simple controller for the `AVAudioSession`. If you need more advanced options, just use the `AVAudioSession` directly.
  - warning: Do not combine usage of this and `AVAudioSession` directly, chose one.
  */
-public class AudioSessionController {
+class AudioSessionController {
     
     public static let shared = AudioSessionController()
     

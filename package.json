@@ -1,6 +1,6 @@
 {
 	"name": "react-native-everything-player",
-	"version": "1.0.1",
+	"version": "1.0.5",
 	"description": "React Native Everything Player — Nitro Modules audio player with SABR, DRM, crossfade, and track trimming",
 	"scripts": {
 		"clean": "rm -rf dist",
@@ -15,7 +15,7 @@
 		"nitrogen": "nitrogen",
 		"lint": "eslint . --fix",
 		"prettier": "prettier --write \"**/*.ts\"",
-		"compile": "npx prettier --write \"**/*.ts\" && eslint . --fix && tsc"
+		"compile": "eslint src --fix && tsc"
 	},
 	"keywords": [
 		"react native",
@@ -83,6 +83,7 @@
 		"eslint": "^10.2.0",
 		"globals": "^17.5.0",
 		"nitrogen": "^0.35.0",
+		"prettier": "^3.6.2",
 		"typescript": "^6.0.2"
 	},
 	"nitro": {

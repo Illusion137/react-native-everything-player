@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "name": "EverythingPlayerExample",
+    "slug": "everything-player-example",
+    "scheme": "everything-player-example",
+    "plugins": [],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.everythingplayer.example"
+    },
+    "android": {
+      "package": "com.everythingplayer.example"
+    }
+  }
+}

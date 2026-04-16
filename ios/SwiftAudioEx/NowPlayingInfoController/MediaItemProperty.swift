@@ -13,7 +13,7 @@ import MediaPlayer
  Enum representing MPMediaItemProperties.
  Docs for each property is taken from [Apple docs](https://developer.apple.com/documentation/mediaplayer/mpmediaitem/general_media_item_property_keys)
  */
-public enum MediaItemProperty: NowPlayingInfoKeyValue {
+enum MediaItemProperty: NowPlayingInfoKeyValue {
     
     /**
      The performing artist(s) for a media item—which may vary from the primary artist for the album that a media item belongs to.

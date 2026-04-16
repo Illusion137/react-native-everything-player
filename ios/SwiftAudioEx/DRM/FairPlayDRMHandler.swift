@@ -5,12 +5,12 @@ import Foundation
 import AVFoundation
 
 /// Delegate for receiving DRM-related errors and events.
-public protocol FairPlayDRMHandlerDelegate: AnyObject {
+protocol FairPlayDRMHandlerDelegate: AnyObject {
     func fairPlayDRMHandler(_ handler: FairPlayDRMHandler, didFailWithError error: Error)
 }
 
 /// Handles FairPlay Streaming DRM license acquisition and renewal.
-public class FairPlayDRMHandler: NSObject, AVContentKeySessionDelegate {
+class FairPlayDRMHandler: NSObject, AVContentKeySessionDelegate {
 
     // MARK: - Properties
 
@@ -41,7 +41,7 @@ public class FairPlayDRMHandler: NSObject, AVContentKeySessionDelegate {
         self.contentKeySession = session
 
         if let playerItem = player.currentItem {
-            session.addContentKeyRecipient(playerItem)
+            attachRecipient(for: playerItem, session: session)
         }
     }
 
@@ -55,7 +55,7 @@ public class FairPlayDRMHandler: NSObject, AVContentKeySessionDelegate {
             session.setDelegate(self, queue: DispatchQueue.global(qos: .userInteractive))
             self.contentKeySession = session
         }
-        session.addContentKeyRecipient(playerItem)
+        attachRecipient(for: playerItem, session: session)
     }
 
     /// Detaches the DRM handler, releasing the content key session.
@@ -75,6 +75,12 @@ public class FairPlayDRMHandler: NSObject, AVContentKeySessionDelegate {
         let data = try Data(contentsOf: url)
         certificateData = data
         return data
+    }
+
+    private func attachRecipient(for playerItem: AVPlayerItem, session: AVContentKeySession) {
+        if let asset = playerItem.asset as? AVContentKeyRecipient {
+            session.addContentKeyRecipient(asset)
+        }
     }
 
     // MARK: - AVContentKeySessionDelegate
@@ -177,7 +183,7 @@ public class FairPlayDRMHandler: NSObject, AVContentKeySessionDelegate {
 
 // MARK: - Errors
 
-public enum FairPlayDRMError: LocalizedError {
+enum FairPlayDRMError: LocalizedError {
     case invalidCertificateURL
     case invalidLicenseServerURL
     case invalidContentIdentifier

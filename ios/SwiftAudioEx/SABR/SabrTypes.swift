@@ -2,12 +2,12 @@ import Foundation
 
 // MARK: - FetchFunction
 
-public typealias FetchFunction = (URLRequest) async throws -> (Data, URLResponse)
+typealias FetchFunction = (URLRequest) async throws -> (Data, URLResponse)
 
 // MARK: - SabrFormat
 
 /// A YouTube SABR format descriptor, combining proto FormatId fields with extra metadata.
-public struct SabrFormat {
+struct SabrFormat {
     public var itag: Int32 = 0
     public var last_modified: String = ""
     public var xtags: String? = nil
@@ -70,7 +70,7 @@ public struct SabrFormat {
 
 // MARK: - SabrStreamConfig
 
-public struct SabrStreamConfig {
+struct SabrStreamConfig {
     public var server_abr_streaming_url: String? = nil
     public var video_playback_ustreamer_config: String? = nil
     /// Internal — `VideoStreaming_StreamerContext.ClientInfo` is not a public type.

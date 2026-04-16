@@ -8,11 +8,11 @@
 import Foundation
 import MediaPlayer
 
-public protocol RemoteCommandable {
+protocol RemoteCommandable {
     func getCommands() ->  [RemoteCommand]
 }
 
-public class RemoteCommandController {
+class RemoteCommandController {
         
     private let center: MPRemoteCommandCenter
     

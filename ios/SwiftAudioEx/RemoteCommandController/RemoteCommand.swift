@@ -9,9 +9,9 @@ import Foundation
 import MediaPlayer
 
 
-public typealias RemoteCommandHandler = (MPRemoteCommandEvent) -> MPRemoteCommandHandlerStatus
+typealias RemoteCommandHandler = (MPRemoteCommandEvent) -> MPRemoteCommandHandlerStatus
 
-public protocol RemoteCommandProtocol {
+protocol RemoteCommandProtocol {
     associatedtype Command: MPRemoteCommand
     
     var id: String { get }
@@ -19,7 +19,7 @@ public protocol RemoteCommandProtocol {
     var handlerKeyPath: KeyPath<RemoteCommandController, RemoteCommandHandler> { get }
 }
 
-public struct PlayBackCommand: RemoteCommandProtocol {
+struct PlayBackCommand: RemoteCommandProtocol {
     
     public static let play = PlayBackCommand(id: "Play", commandKeyPath: \MPRemoteCommandCenter.playCommand, handlerKeyPath: \RemoteCommandController.handlePlayCommand)
     
@@ -44,7 +44,7 @@ public struct PlayBackCommand: RemoteCommandProtocol {
     
 }
 
-public struct ChangePlaybackPositionCommand: RemoteCommandProtocol {
+struct ChangePlaybackPositionCommand: RemoteCommandProtocol {
     
     public static let changePlaybackPosition = ChangePlaybackPositionCommand(id: "ChangePlaybackPosition", commandKeyPath: \MPRemoteCommandCenter.changePlaybackPositionCommand, handlerKeyPath: \RemoteCommandController.handleChangePlaybackPositionCommand)
     
@@ -58,7 +58,7 @@ public struct ChangePlaybackPositionCommand: RemoteCommandProtocol {
     
 }
 
-public struct SkipIntervalCommand: RemoteCommandProtocol {
+struct SkipIntervalCommand: RemoteCommandProtocol {
     
     public static let skipForward = SkipIntervalCommand(id: "SkipForward", commandKeyPath: \MPRemoteCommandCenter.skipForwardCommand, handlerKeyPath: \RemoteCommandController.handleSkipForwardCommand)
     
@@ -79,7 +79,7 @@ public struct SkipIntervalCommand: RemoteCommandProtocol {
     
 }
 
-public struct FeedbackCommand: RemoteCommandProtocol {
+struct FeedbackCommand: RemoteCommandProtocol {
     
     public static let like = FeedbackCommand(id: "Like", commandKeyPath: \MPRemoteCommandCenter.likeCommand, handlerKeyPath: \RemoteCommandController.handleLikeCommand)
     
@@ -103,7 +103,7 @@ public struct FeedbackCommand: RemoteCommandProtocol {
     }
 }
 
-public enum RemoteCommand: CustomStringConvertible {
+enum RemoteCommand: CustomStringConvertible {
 
     case play
     

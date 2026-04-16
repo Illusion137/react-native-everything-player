@@ -8,7 +8,7 @@
 import Foundation
 import MediaPlayer
 
-public protocol NowPlayingInfoCenter {
+protocol NowPlayingInfoCenter {
     
     var nowPlayingInfo: [String: Any]? { get set }
     

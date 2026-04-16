@@ -1,6 +1,6 @@
 import Foundation
 
-public class SabrDownloader {
+class SabrDownloader {
     public typealias ProgressCallback = (Double) -> Void
 
     private var sabrStream: SabrStream           // var — recreated on reload

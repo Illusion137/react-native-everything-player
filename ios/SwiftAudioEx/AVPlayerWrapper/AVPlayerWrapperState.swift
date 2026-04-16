@@ -12,7 +12,7 @@ import Foundation
 /**
  The current state of the AudioPlayer.
  */
-public enum AVPlayerWrapperState: String {
+enum AVPlayerWrapperState: String {
     
     /// An asset is being loaded for playback.
     case loading

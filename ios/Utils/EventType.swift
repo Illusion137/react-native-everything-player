@@ -10,6 +10,7 @@ enum EventType: String, CaseIterable {
     case RemotePlay = "remote-play"
     case RemoteJumpForward = "remote-jump-forward"
     case RemoteJumpBackward = "remote-jump-backward"
+    case RemoteSetRating = "remote-set-rating"
     case RemoteLike = "remote-like"
     case RemoteDislike = "remote-dislike"
     case RemoteBookmark = "remote-bookmark"

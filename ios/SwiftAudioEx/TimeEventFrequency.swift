@@ -9,7 +9,7 @@ import Foundation
 import AVFoundation
 
 
-public enum TimeEventFrequency {
+enum TimeEventFrequency {
     case everySecond
     case everyHalfSecond
     case everyQuarterSecond

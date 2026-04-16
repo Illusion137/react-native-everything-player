@@ -22,7 +22,7 @@ private class AudioTapContext {
 }
 
 /// Processes audio through MTAudioProcessingTap with EQ support
-public class AudioTapProcessor {
+class AudioTapProcessor {
     
     // MARK: - Properties
     
@@ -179,7 +179,7 @@ public class AudioTapProcessor {
     
     private func calculatePeakingEQCoefficients(frequency: Double, gain: Double, Q: Double, sampleRate: Double) -> [Double] {
         // If gain is essentially 0, return identity filter
-        if abs(gain) < 0.01 {
+        if gain.magnitude < 0.01 {
             return [1.0, 0.0, 0.0, 0.0, 0.0]
         }
         

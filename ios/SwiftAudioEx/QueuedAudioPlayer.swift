@@ -11,7 +11,7 @@ import MediaPlayer
 /**
  An audio player that can keep track of a queue of AudioItems.
  */
-public class QueuedAudioPlayer: AudioPlayer, QueueManagerDelegate {
+class QueuedAudioPlayer: AudioPlayer, QueueManagerDelegate {
     let queue: QueueManager = QueueManager<AudioItem>()
     fileprivate var lastIndex: Int = -1
     fileprivate var lastItem: AudioItem? = nil

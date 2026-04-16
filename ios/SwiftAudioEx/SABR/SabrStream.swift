@@ -413,7 +413,7 @@ class SabrStream {
 
             progress_tracker.last_progress_time = current_time
 
-            let downloaded_duration_closeness = abs(duration_ms - current_progress)
+            let downloaded_duration_closeness = (duration_ms - current_progress).magnitude
 
             if downloaded_duration_closeness < 5000 {
                 logger.warn(tag: tag, message: "Stream is close to completion, but stalled. Checking if we have the last segment.")
@@ -998,7 +998,7 @@ class SabrStream {
             let duration_timescale = Int(initialized_format.format_initialization_metadata.duration_timescale ?? "0") ?? 0
             let expected_duration = duration_timescale > 0 ? Double(duration_units) / (Double(duration_timescale) / 1000.0) : 0
 
-            let duration_mismatch = abs(total_duration - expected_duration)
+            let duration_mismatch = (total_duration - expected_duration).magnitude
             if expected_duration > 0 && duration_mismatch > expected_duration * 0.01 {
                 let duration_coverage = Int((total_duration / expected_duration) * 100)
                 logger.warn(tag: tag, message: "Incomplete stream for format \(format_id_key): downloaded \(total_duration)ms (\(duration_coverage)%), expected \(expected_duration)ms")

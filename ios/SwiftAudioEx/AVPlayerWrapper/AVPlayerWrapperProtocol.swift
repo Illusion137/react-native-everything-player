@@ -66,4 +66,8 @@ protocol AVPlayerWrapperProtocol: AnyObject {
     func unload()
     
     func reload(startFromCurrentTime: Bool)
+
+    func updateSabrStreamPoToken(_ poToken: String)
+
+    func updateSabrPlaybackStream(serverUrl: String, ustreamerConfig: String)
 }

@@ -9,7 +9,7 @@ import Foundation
 import MediaPlayer
 
 
-public protocol NowPlayingInfoControllerProtocol {
+protocol NowPlayingInfoControllerProtocol {
     
     init()
     

@@ -8,7 +8,7 @@
 import Foundation
 
 
-public protocol NowPlayingInfoKeyValue {
+protocol NowPlayingInfoKeyValue {
     func getKey() -> String
     func getValue() -> Any?
 }

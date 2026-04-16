@@ -10,7 +10,7 @@ import Foundation
 import AVFoundation
 import MediaPlayer
 
-public enum PlaybackEndedReason: String {
+enum PlaybackEndedReason: String {
     case playedUntilEnd
     case playerStopped
     case skippedToNext
@@ -966,6 +966,10 @@ extension AVPlayerWrapper {
 
     func updateSabrPlaybackStream(serverUrl: String, ustreamerConfig: String) {
         sabrOpusPlayer?.updateStream(serverUrl: serverUrl, ustreamerConfig: ustreamerConfig)
+    }
+
+    func attachFairPlayDRMHandler(_ handler: FairPlayDRMHandler) {
+        handler.attach(to: avPlayer)
     }
 
     /// Set equalizer bands (gain in dB, -24 to +24)

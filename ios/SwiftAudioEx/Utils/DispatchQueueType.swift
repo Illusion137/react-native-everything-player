@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol DispatchQueueType {
+protocol DispatchQueueType {
     func async(flags: DispatchWorkItemFlags, execute work: @escaping @convention(block) () -> Void)
 }
 

@@ -4,9 +4,9 @@ import tseslint from "typescript-eslint";
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
-	{ files: ["**/*.{ts}"] },
+	{ files: ["**/*.{ts,tsx}"] },
 	{ languageOptions: { globals: globals.node } },
-	{ ignores: ["babel.config.js", "eslint.config.mjs", "jest.config.js", "./origin/src/youtube_dl/PATCH/sax/sax.js", "./origin/src/manga_reader/deob.js", "./origin/src/manga_reader/deob2.js", ".expo", "node_modules", "lib-origin", "scripts", "public", "patches", "ios", "c_sources", "assets", ".vscode"] },
+	{ ignores: ["babel.config.js", "eslint.config.mjs", "jest.config.js", "./origin/src/youtube_dl/PATCH/sax/sax.js", "./origin/src/manga_reader/deob.js", "./origin/src/manga_reader/deob2.js", ".expo", "node_modules", "dist", "nitrogen/generated", "android/generated", "android/build", "android/.cxx", ".gradle", "lib-origin", "scripts", "public", "patches", "ios", "c_sources", "assets", ".vscode"] },
 	pluginJs.configs.recommended,
 	...tseslint.configs.all,
 	{ languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname } } },

@@ -83,18 +83,17 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
             for (key, value) in body {
                 switch value {
                 case let v as String:
-                    map.setString(forKey: key, value: v)
+                    map.setString(key: key, value: v)
                 case let v as Double:
-                    map.setDouble(forKey: key, value: v)
+                    map.setDouble(key: key, value: v)
                 case let v as Float:
-                    map.setDouble(forKey: key, value: Double(v))
+                    map.setDouble(key: key, value: Double(v))
                 case let v as Int:
-                    map.setDouble(forKey: key, value: Double(v))
+                    map.setDouble(key: key, value: Double(v))
                 case let v as Bool:
-                    map.setBoolean(forKey: key, value: v)
+                    map.setBoolean(key: key, value: v)
                 case let v as [String: Any]:
-                    let inner = buildAnyMap(from: v)
-                    map.setAnyMap(forKey: key, value: inner)
+                    try? map.setAny(key: key, value: v)
                 default:
                     break
                 }
@@ -159,17 +158,17 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
         for (key, value) in dict {
             switch value {
             case let v as String:
-                map.setString(forKey: key, value: v)
+                map.setString(key: key, value: v)
             case let v as Double:
-                map.setDouble(forKey: key, value: v)
+                map.setDouble(key: key, value: v)
             case let v as Float:
-                map.setDouble(forKey: key, value: Double(v))
+                map.setDouble(key: key, value: Double(v))
             case let v as Int:
-                map.setDouble(forKey: key, value: Double(v))
+                map.setDouble(key: key, value: Double(v))
             case let v as Bool:
-                map.setBoolean(forKey: key, value: v)
+                map.setBoolean(key: key, value: v)
             case let v as [String: Any]:
-                map.setAnyMap(forKey: key, value: buildAnyMap(from: v))
+                try? map.setAny(key: key, value: v)
             default:
                 break
             }
@@ -178,30 +177,16 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
     }
 
     private func anyMapToDictionary(_ map: AnyMap) -> [String: Any] {
-        var dict: [String: Any] = [:]
-        for key in map.getAllKeys() {
-            let type = map.getType(forKey: key)
-            switch type {
-            case .string:
-                if let v = map.getString(forKey: key) { dict[key] = v }
-            case .double:
-                dict[key] = map.getDouble(forKey: key)
-            case .boolean:
-                dict[key] = map.getBoolean(forKey: key)
-            case .anyMap:
-                if let inner = map.getAnyMap(forKey: key) {
-                    dict[key] = anyMapToDictionary(inner)
-                }
-            default:
-                break
+        map.toDictionary().reduce(into: [String: Any]()) { result, entry in
+            if let value = entry.value {
+                result[entry.key] = value
             }
         }
-        return dict
     }
 
     // MARK: - AudioSessionControllerDelegate
 
-    public func handleInterruption(type: InterruptionType) {
+    func handleInterruption(type: InterruptionType) {
         switch type {
         case .began:
             emit(event: .RemoteDuck, body: ["paused": true])
@@ -232,10 +217,14 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
         }
     }
 
+    private func wrapAsync<T>(_ run: @escaping () async throws -> T) -> Promise<Promise<T>> {
+        return Promise<Promise<T>>.resolved(withResult: Promise<T>.async { try await run() })
+    }
+
     // MARK: - Setup
 
-    public func setupPlayer(options: AnyMap) throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var setupPlayer: (_ options: AnyMap) -> Promise<Promise<Void>> = { options in
+        self.wrapAsync {
             if self.hasInitialized {
                 throw NSError(domain: "EverythingPlayer", code: 2, userInfo: [NSLocalizedDescriptionKey: "The player has already been initialized via setupPlayer."])
             }
@@ -359,8 +348,8 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
 
     // MARK: - Options
 
-    public func updateOptions(options: AnyMap) throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var updateOptions: (_ options: AnyMap) -> Promise<Promise<Void>> = { options in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             let opts = self.anyMapToDictionary(options)
 
@@ -398,8 +387,8 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
 
     // MARK: - Queue Management
 
-    public func add(tracks: [AnyMap], insertBeforeIndex: Variant_NullType_Double?) throws -> Promise<Variant_NullType_Double> {
-        return Promise.async {
+    public lazy var add: (_ tracks: [AnyMap], _ insertBeforeIndex: Variant_NullType_Double?) -> Promise<Promise<Variant_NullType_Double>> = { tracks, insertBeforeIndex in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             let rawIndex: Double
             switch insertBeforeIndex {
@@ -422,8 +411,8 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
         }
     }
 
-    public func load(track: AnyMap) throws -> Promise<Variant_NullType_Double> {
-        return Promise.async {
+    public lazy var load: (_ track: AnyMap) -> Promise<Promise<Variant_NullType_Double>> = { track in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             let dict = self.anyMapToDictionary(track)
             guard let t = Track(dictionary: dict) else {
@@ -436,8 +425,8 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
         }
     }
 
-    public func remove(indexes: [Double]) throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var remove: (_ indexes: [Double]) -> Promise<Promise<Void>> = { indexes in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             let intIndexes = indexes.map { Int($0) }
             for index in intIndexes {
@@ -449,23 +438,23 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
         }
     }
 
-    public func move(fromIndex: Double, toIndex: Double) throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var move: (_ fromIndex: Double, _ toIndex: Double) -> Promise<Promise<Void>> = { fromIndex, toIndex in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             try self.throwWhenTrackIndexOutOfBounds(index: Int(fromIndex))
             try? self.player.moveItem(fromIndex: Int(fromIndex), toIndex: Int(toIndex))
         }
     }
 
-    public func removeUpcomingTracks() throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var removeUpcomingTracks: () -> Promise<Promise<Void>> = {
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             self.player.removeUpcomingItems()
         }
     }
 
-    public func setQueue(tracks: [AnyMap]) throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var setQueue: (_ tracks: [AnyMap]) -> Promise<Promise<Void>> = { tracks in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             var trackObjects = [Track]()
             for trackMap in tracks {
@@ -482,51 +471,51 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
 
     // MARK: - Playback Control
 
-    public func play() throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var play: () -> Promise<Promise<Void>> = {
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             self.player.play()
         }
     }
 
-    public func pause() throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var pause: () -> Promise<Promise<Void>> = {
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             self.player.pause()
         }
     }
 
-    public func stop() throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var stop: () -> Promise<Promise<Void>> = {
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             self.player.stop()
         }
     }
 
-    public func reset() throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var reset: () -> Promise<Promise<Void>> = {
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             self.player.stop()
             self.player.clear()
         }
     }
 
-    public func retry() throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var retry: () -> Promise<Promise<Void>> = {
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             self.player.reload(startFromCurrentTime: true)
         }
     }
 
-    public func setPlayWhenReady(playWhenReady: Bool) throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var setPlayWhenReady: (_ playWhenReady: Bool) -> Promise<Promise<Void>> = { playWhenReady in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             self.player.playWhenReady = playWhenReady
         }
     }
 
-    public func getPlayWhenReady() throws -> Promise<Bool> {
-        return Promise.async {
+    public lazy var getPlayWhenReady: () -> Promise<Promise<Bool>> = {
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             return self.player.playWhenReady
         }
@@ -534,8 +523,8 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
 
     // MARK: - Navigation
 
-    public func skip(index: Double, initialPosition: Variant_NullType_Double?) throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var skip: (_ index: Double, _ initialPosition: Variant_NullType_Double?) -> Promise<Promise<Void>> = { index, initialPosition in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             let trackIndex = Int(index)
             try self.throwWhenTrackIndexOutOfBounds(index: trackIndex)
@@ -546,8 +535,8 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
         }
     }
 
-    public func skipToNext(initialPosition: Variant_NullType_Double?) throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var skipToNext: (_ initialPosition: Variant_NullType_Double?) -> Promise<Promise<Void>> = { initialPosition in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             self.player.next()
             if case .second(let pos) = initialPosition, pos >= 0 {
@@ -556,8 +545,8 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
         }
     }
 
-    public func skipToPrevious(initialPosition: Variant_NullType_Double?) throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var skipToPrevious: (_ initialPosition: Variant_NullType_Double?) -> Promise<Promise<Void>> = { initialPosition in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             self.player.previous()
             if case .second(let pos) = initialPosition, pos >= 0 {
@@ -566,15 +555,15 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
         }
     }
 
-    public func seekTo(position: Double) throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var seekTo: (_ position: Double) -> Promise<Promise<Void>> = { position in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             self.player.seek(to: position)
         }
     }
 
-    public func seekBy(offset: Double) throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var seekBy: (_ offset: Double) -> Promise<Promise<Void>> = { offset in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             self.player.seek(by: offset)
         }
@@ -582,43 +571,43 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
 
     // MARK: - Playback Properties
 
-    public func setRate(rate: Double) throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var setRate: (_ rate: Double) -> Promise<Promise<Void>> = { rate in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             self.player.rate = Float(rate)
         }
     }
 
-    public func getRate() throws -> Promise<Double> {
-        return Promise.async {
+    public lazy var getRate: () -> Promise<Promise<Double>> = {
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             return Double(self.player.rate)
         }
     }
 
-    public func setVolume(level: Double) throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var setVolume: (_ level: Double) -> Promise<Promise<Void>> = { level in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             self.player.volume = Float(level)
         }
     }
 
-    public func getVolume() throws -> Promise<Double> {
-        return Promise.async {
+    public lazy var getVolume: () -> Promise<Promise<Double>> = {
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             return Double(self.player.volume)
         }
     }
 
-    public func setRepeatMode(mode: Double) throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var setRepeatMode: (_ mode: Double) -> Promise<Promise<Void>> = { mode in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             self.player.repeatMode = RepeatMode(rawValue: Int(mode)) ?? .off
         }
     }
 
-    public func getRepeatMode() throws -> Promise<Double> {
-        return Promise.async {
+    public lazy var getRepeatMode: () -> Promise<Promise<Double>> = {
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             return Double(self.player.repeatMode.rawValue)
         }
@@ -626,8 +615,8 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
 
     // MARK: - Track / Queue Getters
 
-    public func getTrack(index: Double) throws -> Promise<Variant_NullType_AnyMap> {
-        return Promise.async {
+    public lazy var getTrack: (_ index: Double) -> Promise<Promise<Variant_NullType_AnyMap>> = { index in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             let indexInt = Int(index)
             if indexInt >= 0 && indexInt < self.player.items.count,
@@ -638,15 +627,15 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
         }
     }
 
-    public func getQueue() throws -> Promise<[AnyMap]> {
-        return Promise.async {
+    public lazy var getQueue: () -> Promise<Promise<[AnyMap]>> = {
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             return self.player.items.compactMap { ($0 as? Track)?.toObject() }.map { self.buildAnyMap(from: $0) }
         }
     }
 
-    public func getActiveTrack() throws -> Promise<Variant_NullType_AnyMap> {
-        return Promise.async {
+    public lazy var getActiveTrack: () -> Promise<Promise<Variant_NullType_AnyMap>> = {
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             let index = self.player.currentIndex
             if index >= 0 && index < self.player.items.count,
@@ -657,8 +646,8 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
         }
     }
 
-    public func getActiveTrackIndex() throws -> Promise<Variant_NullType_Double> {
-        return Promise.async {
+    public lazy var getActiveTrackIndex: () -> Promise<Promise<Variant_NullType_Double>> = {
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             let index = self.player.currentIndex
             if index < 0 || index >= self.player.items.count {
@@ -668,19 +657,19 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
         }
     }
 
-    public func getProgress() throws -> Promise<AnyMap> {
-        return Promise.async {
+    public lazy var getProgress: () -> Promise<Promise<AnyMap>> = {
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             let map = AnyMap()
-            map.setDouble(forKey: "position", value: self.player.currentTime)
-            map.setDouble(forKey: "duration", value: self.player.duration)
-            map.setDouble(forKey: "buffered", value: self.player.bufferedPosition)
+            map.setDouble(key: "position", value: self.player.currentTime)
+            map.setDouble(key: "duration", value: self.player.duration)
+            map.setDouble(key: "buffered", value: self.player.bufferedPosition)
             return map
         }
     }
 
-    public func getPlaybackState() throws -> Promise<AnyMap> {
-        return Promise.async {
+    public lazy var getPlaybackState: () -> Promise<Promise<AnyMap>> = {
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             return self.buildAnyMap(from: self.getPlaybackStateBodyKeyValues(state: self.player.playerState))
         }
@@ -688,8 +677,8 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
 
     // MARK: - Metadata
 
-    public func updateMetadataForTrack(trackIndex: Double, metadata: AnyMap) throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var updateMetadataForTrack: (_ trackIndex: Double, _ metadata: AnyMap) -> Promise<Promise<Void>> = { trackIndex, metadata in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             let idx = Int(trackIndex)
             try self.throwWhenTrackIndexOutOfBounds(index: idx)
@@ -702,8 +691,8 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
         }
     }
 
-    public func updateNowPlayingMetadata(metadata: AnyMap) throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var updateNowPlayingMetadata: (_ metadata: AnyMap) -> Promise<Promise<Void>> = { metadata in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             let dict = self.anyMapToDictionary(metadata)
             Metadata.update(for: self.player, with: dict)
@@ -712,8 +701,8 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
 
     // MARK: - Crossfade
 
-    public func setCrossFade(seconds: Double) throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var setCrossFade: (_ seconds: Double) -> Promise<Promise<Void>> = { seconds in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             self.player.crossfadeDuration = seconds
         }
@@ -721,31 +710,31 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
 
     // MARK: - Equalizer
 
-    public func setEqualizer(bands: [AnyMap]) throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var setEqualizer: (_ bands: [AnyMap]) -> Promise<Promise<Void>> = { bands in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             let gains = bands.map { band -> Float in
-                let gain = band.getDouble(forKey: "gain")
+                let gain = band.getDouble(key: "gain")
                 return Float(gain)
             }
             self.player.setEqualizerBands(gains)
         }
     }
 
-    public func getEqualizer() throws -> Promise<[AnyMap]> {
-        return Promise.async {
+    public lazy var getEqualizer: () -> Promise<Promise<[AnyMap]>> = {
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             return self.player.getEqualizerBands().enumerated().map { (i, gain) in
                 let map = AnyMap()
-                map.setDouble(forKey: "gain", value: Double(gain))
-                map.setDouble(forKey: "frequency", value: Double(i))
+                map.setDouble(key: "gain", value: Double(gain))
+                map.setDouble(key: "frequency", value: Double(i))
                 return map
             }
         }
     }
 
-    public func removeEqualizer() throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var removeEqualizer: () -> Promise<Promise<Void>> = {
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             self.player.removeEqualizer()
         }
@@ -755,8 +744,8 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
 
     private var sabrDownloaders: [String: SabrDownloader] = [:]
 
-    public func downloadSabrStream(params: AnyMap, outputPath: String) throws -> Promise<String> {
-        return Promise.async {
+    public lazy var downloadSabrStream: (_ params: AnyMap, _ outputPath: String) -> Promise<Promise<String>> = { params, outputPath in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             let paramsDict = self.anyMapToDictionary(params)
             guard let serverUrl = paramsDict["sabrServerUrl"] as? String,
@@ -802,13 +791,13 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
             _ = try await downloader.download(to: outputURL, preferOpus: preferOpus) { [weak self] fraction in
                 self?.emit(event: .SabrDownloadProgress, body: ["outputPath": outputPath, "progress": fraction])
             }
-            await MainActor.run { self.sabrDownloaders.removeValue(forKey: outputPath) }
+            _ = await MainActor.run { self.sabrDownloaders.removeValue(forKey: outputPath) }
             return outputPath
         }
     }
 
-    public func updateSabrDownloadStream(outputPath: String, serverUrl: String, ustreamerConfig: String) throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var updateSabrDownloadStream: (_ outputPath: String, _ serverUrl: String, _ ustreamerConfig: String) -> Promise<Promise<Void>> = { outputPath, serverUrl, ustreamerConfig in
+        self.wrapAsync {
             guard let downloader = self.sabrDownloaders[outputPath] else {
                 throw NSError(domain: "EverythingPlayer", code: 5, userInfo: [NSLocalizedDescriptionKey: "No active SABR download for outputPath: \(outputPath)"])
             }
@@ -816,8 +805,8 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
         }
     }
 
-    public func updateSabrDownloadPoToken(outputPath: String, poToken: String) throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var updateSabrDownloadPoToken: (_ outputPath: String, _ poToken: String) -> Promise<Promise<Void>> = { outputPath, poToken in
+        self.wrapAsync {
             guard let downloader = self.sabrDownloaders[outputPath] else {
                 throw NSError(domain: "EverythingPlayer", code: 5, userInfo: [NSLocalizedDescriptionKey: "No active SABR download for outputPath: \(outputPath)"])
             }
@@ -825,32 +814,32 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
         }
     }
 
-    public func updateSabrPlaybackPoToken(poToken: String) throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var updateSabrPlaybackPoToken: (_ poToken: String) -> Promise<Promise<Void>> = { poToken in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
             self.player.updateSabrStreamPoToken(poToken)
         }
     }
 
-    public func updateSabrPlaybackStream(serverUrl: String, ustreamerConfig: String) throws -> Promise<Void> {
-        return Promise.async {
+    public lazy var updateSabrPlaybackStream: (_ serverUrl: String, _ ustreamerConfig: String) -> Promise<Promise<Void>> = { serverUrl, ustreamerConfig in
+        self.wrapAsync {
             try self.throwWhenNotInitialized()
-            self.player.wrapper.updateSabrPlaybackStream(serverUrl: serverUrl, ustreamerConfig: ustreamerConfig)
+            self.player.updateSabrPlaybackStream(serverUrl: serverUrl, ustreamerConfig: ustreamerConfig)
         }
     }
 
     // MARK: - Android-only Stubs
 
-    public func acquireWakeLock() throws -> Promise<Void> {
-        return Promise.async { }
+    public lazy var acquireWakeLock: () -> Promise<Promise<Void>> = {
+        self.wrapAsync { }
     }
 
-    public func abandonWakeLock() throws -> Promise<Void> {
-        return Promise.async { }
+    public lazy var abandonWakeLock: () -> Promise<Promise<Void>> = {
+        self.wrapAsync { }
     }
 
-    public func validateOnStartCommandIntent() throws -> Promise<Bool> {
-        return Promise.async { true }
+    public lazy var validateOnStartCommandIntent: () -> Promise<Promise<Bool>> = {
+        self.wrapAsync { true }
     }
 
     // MARK: - DRM
@@ -867,7 +856,7 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
         if let headers = track.drmHeaders {
             handler.licenseRequestHeaders = headers
         }
-        handler.attach(to: player.wrapper.avPlayer)
+        player.attachFairPlayDRMHandler(handler)
         drmHandler = handler
     }
 

@@ -26,6 +26,21 @@ function resolveTrackAssets(track: AddTrack) {
 	return { ...track, url: resolveImportedAssetOrPath(track.url), artwork: resolveImportedAssetOrPath(track.artwork) };
 }
 
+function normalizeNitroValue(value: unknown): unknown {
+	if (value == null) return null;
+	if (typeof value === "string" || typeof value === "boolean") return value;
+	if (typeof value === "number") return Number.isFinite(value) ? value : null;
+	if (Array.isArray(value)) return value.map((item) => normalizeNitroValue(item));
+	if (typeof value === "object") {
+		const normalized: Record<string, unknown> = {};
+		for (const [key, nestedValue] of Object.entries(value)) {
+			if (nestedValue !== undefined) normalized[key] = normalizeNitroValue(nestedValue);
+		}
+		return normalized;
+	}
+	return String(value);
+}
+
 // MARK: - Event System (Nitro callback multiplexer)
 
 type EventCallback<T extends Event> = EventPayloadByEvent[T] extends never ? () => void : (event: EventPayloadByEvent[T]) => void;
@@ -486,7 +501,7 @@ export async function setCrossFade(seconds: number): Promise<void> {
  * @returns The output path on success
  */
 export async function downloadSabrStream(params: SabrDownloadParams, outputPath: string): Promise<string> {
-	return TrackPlayer.downloadSabrStream(params as unknown as AnyMap, outputPath);
+	return TrackPlayer.downloadSabrStream(normalizeNitroValue(params) as AnyMap, outputPath);
 }
 
 export async function downloadSabr(params: SabrDownloadParams, outputPath: string): Promise<string> {

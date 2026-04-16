@@ -8,9 +8,9 @@
 import Foundation
 import MediaPlayer
 
-public typealias AudioPlayerState = AVPlayerWrapperState
+typealias AudioPlayerState = AVPlayerWrapperState
 
-public class AudioPlayer: AVPlayerWrapperDelegate {
+class AudioPlayer: AVPlayerWrapperDelegate {
     
     // MARK: - Properties
     
@@ -457,5 +457,13 @@ public class AudioPlayer: AVPlayerWrapperDelegate {
 
     public func updateSabrStreamPoToken(_ poToken: String) {
         avPlayerWrapper.updateSabrStreamPoToken(poToken)
+    }
+
+    public func updateSabrPlaybackStream(serverUrl: String, ustreamerConfig: String) {
+        avPlayerWrapper.updateSabrPlaybackStream(serverUrl: serverUrl, ustreamerConfig: ustreamerConfig)
+    }
+
+    func attachFairPlayDRMHandler(_ handler: FairPlayDRMHandler) {
+        avPlayerWrapper.attachFairPlayDRMHandler(handler)
     }
 }

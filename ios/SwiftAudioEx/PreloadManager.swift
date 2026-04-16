@@ -5,7 +5,7 @@ import Foundation
 import AVFoundation
 
 /// Manages preloading of upcoming audio items to reduce playback latency.
-public class PreloadManager {
+class PreloadManager {
 
     public static let shared = PreloadManager()
 

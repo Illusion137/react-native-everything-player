@@ -13,7 +13,7 @@ import MediaPlayer
  Enum representing MPNowPlayingInfoProperties.
  Docs for each property is taken from [Apple docs](https://developer.apple.com/documentation/mediaplayer/mpnowplayinginfocenter/additional_metadata_properties).
  */
-public enum NowPlayingInfoProperty: NowPlayingInfoKeyValue {
+enum NowPlayingInfoProperty: NowPlayingInfoKeyValue {
     
     /**
      The identifier of the collection the now playing item belongs to.

@@ -8,7 +8,7 @@
 import Foundation
 
 
-public enum AudioPlayerError: Error {
+enum AudioPlayerError: Error {
 
     public enum PlaybackError: Error {
         case failedToLoadKeyValue
