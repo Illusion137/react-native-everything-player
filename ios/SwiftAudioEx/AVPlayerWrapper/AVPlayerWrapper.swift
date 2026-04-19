@@ -29,7 +29,7 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
         case defaultAVPlayer
     }
 
-    fileprivate var avPlayer = AVPlayer()
+    internal var avPlayer = AVPlayer()
     private let playerObserver = AVPlayerObserver()
     internal let playerTimeObserver: AVPlayerTimeObserver
     private let playerItemNotificationObserver = AVPlayerItemNotificationObserver()
@@ -45,6 +45,17 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
     private var _isMuted: Bool = false
     var onSabrRefreshPoToken: ((String) -> Void)? = nil
     var onSabrReloadPlayerResponse: ((String?) -> Void)? = nil
+    /// Set to true before loading a SABR track to request video alongside audio.
+    internal var videoEnabled: Bool = false {
+        didSet {
+            if videoEnabled {
+                hasDeliveredSabrVideoStream = false
+            }
+        }
+    }
+    /// Called when a SABR video stream becomes available (only fires when videoEnabled == true).
+    internal var onSabrVideoStreamReady: ((AsyncThrowingStream<Data, Error>) -> Void)? = nil
+    private var hasDeliveredSabrVideoStream = false
     /// Wall-clock time when the opus player started playing (adjusted for pauses).
     private var opusPlayStartDate: Date? = nil
     /// Wall-clock time when opus was paused (nil when not paused).
@@ -81,6 +92,7 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
     // MARK: - AVPlayerWrapperProtocol
 
     fileprivate(set) var playbackError: AudioPlayerError.PlaybackError? = nil
+    fileprivate(set) var playbackErrorDescription: String? = nil
 
     var _state: AVPlayerWrapperState = AVPlayerWrapperState.idle
     var state: AVPlayerWrapperState {
@@ -339,10 +351,20 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
         }
     }
 
-    private func playbackFailed(error: AudioPlayerError.PlaybackError) {
+    private func playbackFailed(error: AudioPlayerError.PlaybackError, detail: String? = nil) {
         state = .failed
         self.playbackError = error
-        self.delegate?.AVWrapper(failedWithError: error)
+        self.playbackErrorDescription = detail
+        if let detail {
+            let nsError = NSError(
+                domain: "EverythingPlayer.SABR",
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: detail]
+            )
+            self.delegate?.AVWrapper(failedWithError: nsError)
+        } else {
+            self.delegate?.AVWrapper(failedWithError: error)
+        }
     }
 
     private func effectiveOutputVolume() -> Float {
@@ -363,6 +385,7 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
     }
 
     func load() {
+        playbackErrorDescription = nil
         if (state == .failed) {
             recreateAVPlayer()
         } else {
@@ -410,56 +433,25 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
                 }
             })
 
-            // Load playable portion of the track and commence when ready
-            let playableKeys = ["playable"]
-            pendingAsset.loadValuesAsynchronously(forKeys: playableKeys, completionHandler: { [weak self] in
-                guard let self = self else { return }
+            // Attach asset directly to AVPlayerItem and let AVPlayer perform authoritative
+            // readiness/failure evaluation. The manual `playable` key precheck can produce
+            // false negatives for some valid remote media URLs.
+            let item = AVPlayerItem(asset: pendingAsset)
+            self.item = item
+            item.preferredForwardBufferDuration = self.bufferDuration
 
-                DispatchQueue.main.async {
-                    if (pendingAsset != self.asset) { return; }
+            if self.audioProcessingEnabled {
+                self.applyAudioTap(to: item, asset: pendingAsset)
+            }
 
-                    for key in playableKeys {
-                        var error: NSError?
-                        let keyStatus = pendingAsset.statusOfValue(forKey: key, error: &error)
-                        switch keyStatus {
-                        case .failed:
-                            self.playbackFailed(error: AudioPlayerError.PlaybackError.failedToLoadKeyValue)
-                            return
-                        case .cancelled, .loading, .unknown:
-                            return
-                        case .loaded:
-                            break
-                        default: break
-                        }
-                    }
+            self.avPlayer.replaceCurrentItem(with: item)
+            self.startObservingAVPlayer(item: item)
+            self.applyAVPlayerRate()
 
-                    if (!pendingAsset.isPlayable) {
-                        self.playbackFailed(error: AudioPlayerError.PlaybackError.itemWasUnplayable)
-                        return;
-                    }
-
-                    let item = AVPlayerItem(
-                        asset: pendingAsset,
-                        automaticallyLoadedAssetKeys: playableKeys
-                    )
-                    self.item = item;
-                    item.preferredForwardBufferDuration = self.bufferDuration
-
-                    // Apply audio processing tap for equalizer (on main thread to avoid race conditions)
-                    if self.audioProcessingEnabled {
-                        self.applyAudioTap(to: item, asset: pendingAsset)
-                    }
-
-                    self.avPlayer.replaceCurrentItem(with: item)
-                    self.startObservingAVPlayer(item: item)
-                    self.applyAVPlayerRate()
-
-                    if let initialTime = self.timeToSeekToAfterLoading {
-                        self.timeToSeekToAfterLoading = nil
-                        self.seek(to: initialTime)
-                    }
-                }
-            })
+            if let initialTime = self.timeToSeekToAfterLoading {
+                self.timeToSeekToAfterLoading = nil
+                self.seek(to: initialTime)
+            }
         }
     }
 
@@ -502,7 +494,7 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
                 itemUrl = URL(fileURLWithPath: url)
             }
         } else {
-            itemUrl = URL(string: url)
+            itemUrl = AVPlayerWrapper.normalizedRemoteURL(from: url)
         }
 
         if let itemUrl {
@@ -514,6 +506,24 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
             clearCurrentItem()
             playbackFailed(error: AudioPlayerError.PlaybackError.invalidSourceUrl(url))
         }
+    }
+
+    private static func normalizedRemoteURL(from rawURL: String) -> URL? {
+        let trimmed = rawURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        if let direct = URL(string: trimmed), direct.scheme != nil {
+            return direct
+        }
+
+        guard let encoded = trimmed.addingPercentEncoding(withAllowedCharacters: .urlFragmentAllowed) else {
+            return nil
+        }
+        if let normalized = URL(string: encoded), normalized.scheme != nil {
+            return normalized
+        }
+
+        return nil
     }
 
     func unload() {
@@ -571,6 +581,7 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
 
         let player = SabrOpusPlayer(stream: stream)
         sabrOpusPlayer = player
+        hasDeliveredSabrVideoStream = false
         applyOutputLevels()
 
         player.onRefreshPoToken = { [weak self] reason in
@@ -622,11 +633,14 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
             }
         }
 
-        player.onDidFailPlaying = { [weak self] in
+        player.onDidFailPlaying = { [weak self] nativeError in
             guard let self, self.sabrOpusPlayer === player else { return }
             DispatchQueue.main.async {
                 self.stopOpusTimer()
-                self.playbackFailed(error: AudioPlayerError.PlaybackError.playbackFailed)
+                self.playbackFailed(
+                    error: AudioPlayerError.PlaybackError.playbackFailed,
+                    detail: nativeError?.localizedDescription
+                )
             }
         }
 
@@ -636,18 +650,47 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
             DispatchQueue.main.async { self.applyAVPlayerRate() }
         }
 
+        if videoEnabled {
+            player.onVideoStreamReady = { [weak self] videoStream in
+                self?.hasDeliveredSabrVideoStream = true
+                self?.onSabrVideoStreamReady?(videoStream)
+            }
+        }
+
         state = .loading
         if let d = passedDuration, d > 0 {
             delegate?.AVWrapper(didUpdateDuration: d)
         }
 
         let durationMs = (passedDuration ?? 0) * 1000
-        var playbackOptions = SabrPlaybackOptions(enabled_track_types: EnabledTrackTypes.audio_only)
+        let trackTypes = videoEnabled ? EnabledTrackTypes.video_and_audio : EnabledTrackTypes.audio_only
+        var playbackOptions = SabrPlaybackOptions(enabled_track_types: trackTypes)
         playbackOptions.prefer_opus = true
         playbackOptions.prefer_web_m = true
-        playbackOptions.prefer_mp4 = nil
+        playbackOptions.prefer_h264 = videoEnabled ? true : nil
+        playbackOptions.prefer_mp4 = videoEnabled ? true : nil
         player.prepareAudioSession()
         player.start(options: playbackOptions, durationMs: durationMs, startTimeMs: startTimeMs)
+    }
+
+    internal func ensureSabrVideoStreamAttachedForCurrentItem() {
+        guard videoEnabled,
+              sabrOpusPlayer != nil,
+              hasDeliveredSabrVideoStream == false,
+              urlOptions?["isSabr"] as? Bool == true else {
+            return
+        }
+
+        let shouldPlay = playWhenReady
+        let restartMs = max(0, currentTime * 1000)
+        sabrOpusPlayer?.cancel()
+        sabrOpusPlayer = nil
+        stopOpusTimer()
+        opusPlayStartDate = nil
+        opusPausedAt = nil
+        state = .loading
+        loadSABR(startTimeMs: restartMs)
+        playWhenReady = shouldPlay
     }
 
     private func loadOpusFile(url: URL) {
@@ -686,11 +729,14 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
                 self.delegate?.AVWrapperItemDidPlayToEndTime()
             }
         }
-        player.onDidFailPlaying = { [weak self] in
+        player.onDidFailPlaying = { [weak self] nativeError in
             guard let self, self.sabrOpusPlayer === player else { return }
             DispatchQueue.main.async {
                 self.stopOpusTimer()
-                self.playbackFailed(error: AudioPlayerError.PlaybackError.playbackFailed)
+                self.playbackFailed(
+                    error: AudioPlayerError.PlaybackError.playbackFailed,
+                    detail: nativeError?.localizedDescription
+                )
             }
         }
         player.onEngineStarted = { [weak self] in
@@ -766,6 +812,7 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
         stopOpusTimer()
         sabrOpusPlayer?.cancel()
         sabrOpusPlayer = nil
+        hasDeliveredSabrVideoStream = false
         opusPlayStartDate = nil
         opusPausedAt = nil
 
@@ -841,7 +888,16 @@ class AVPlayerWrapper: AVPlayerWrapperProtocol {
                 }
             }
         } else {
-            avPlayer.rate = playWhenReady ? _rate : 0
+            if playWhenReady {
+                // `play()` persists intent while the item is still loading/buffering.
+                // Setting `rate` directly before readiness can be dropped by AVPlayer.
+                avPlayer.play()
+                if _rate != 1.0 {
+                    avPlayer.rate = _rate
+                }
+            } else {
+                avPlayer.pause()
+            }
         }
         applyOutputLevels()
     }
@@ -886,7 +942,8 @@ extension AVPlayerWrapper: AVPlayerObserverDelegate {
             let error = item!.error as NSError?
             playbackFailed(error: error?.code == URLError.notConnectedToInternet.rawValue
                  ? AudioPlayerError.PlaybackError.notConnectedToInternet
-                 : AudioPlayerError.PlaybackError.playbackFailed
+                 : AudioPlayerError.PlaybackError.playbackFailed,
+                detail: error?.localizedDescription
             )
         }
     }
@@ -928,8 +985,28 @@ extension AVPlayerWrapper: AVPlayerItemNotificationObserverDelegate {
 
 extension AVPlayerWrapper {
 
+    private func shouldApplyAudioTap(to asset: AVAsset) -> Bool {
+        // Audio tap equalizer is unstable on AVPlayerItem content loaded from
+        // video containers (e.g. progressive MP4). Skip tap for those assets.
+        if let urlAsset = asset as? AVURLAsset {
+            let ext = urlAsset.url.pathExtension.lowercased()
+            if ["mp4", "m4v", "mov"].contains(ext) {
+                return false
+            }
+        }
+        if !asset.tracks(withMediaType: .video).isEmpty {
+            return false
+        }
+        return true
+    }
+
     /// Apply audio tap to player item (with safe track loading)
     func applyAudioTap(to item: AVPlayerItem, asset: AVAsset) {
+        guard shouldApplyAudioTap(to: asset) else {
+            item.audioMix = nil
+            return
+        }
+
         // Check if tracks are available
         let tracks = asset.tracks(withMediaType: .audio)
         if !tracks.isEmpty {

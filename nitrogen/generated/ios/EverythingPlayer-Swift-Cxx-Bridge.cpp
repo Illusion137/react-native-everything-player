@@ -10,6 +10,7 @@
 // Include C++ implementation defined types
 #include "EverythingPlayer-Swift-Cxx-Umbrella.hpp"
 #include "HybridNativeEverythingPlayerSpecSwift.hpp"
+#include "HybridNativeVideoViewSpecSwift.hpp"
 #include <NitroModules/NitroDefines.hpp>
 
 namespace margelo::nitro::everythingplayer::bridge::swift {
@@ -370,6 +371,22 @@ namespace margelo::nitro::everythingplayer::bridge::swift {
     }
     #endif
     EverythingPlayer::HybridNativeEverythingPlayerSpec_cxx& swiftPart = swiftWrapper->getSwiftPart();
+    return swiftPart.toUnsafe();
+  }
+  
+  // pragma MARK: std::shared_ptr<HybridNativeVideoViewSpec>
+  std::shared_ptr<HybridNativeVideoViewSpec> create_std__shared_ptr_HybridNativeVideoViewSpec_(void* NON_NULL swiftUnsafePointer) noexcept {
+    EverythingPlayer::HybridNativeVideoViewSpec_cxx swiftPart = EverythingPlayer::HybridNativeVideoViewSpec_cxx::fromUnsafe(swiftUnsafePointer);
+    return std::make_shared<margelo::nitro::everythingplayer::HybridNativeVideoViewSpecSwift>(swiftPart);
+  }
+  void* NON_NULL get_std__shared_ptr_HybridNativeVideoViewSpec_(std__shared_ptr_HybridNativeVideoViewSpec_ cppType) {
+    std::shared_ptr<margelo::nitro::everythingplayer::HybridNativeVideoViewSpecSwift> swiftWrapper = std::dynamic_pointer_cast<margelo::nitro::everythingplayer::HybridNativeVideoViewSpecSwift>(cppType);
+    #ifdef NITRO_DEBUG
+    if (swiftWrapper == nullptr) [[unlikely]] {
+      throw std::runtime_error("Class \"HybridNativeVideoViewSpec\" is not implemented in Swift!");
+    }
+    #endif
+    EverythingPlayer::HybridNativeVideoViewSpec_cxx& swiftPart = swiftWrapper->getSwiftPart();
     return swiftPart.toUnsafe();
   }
 

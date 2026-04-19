@@ -1,22 +1,39 @@
 {
-  "name": "react-native-everything-player-example",
-  "private": true,
-  "version": "1.0.0",
-  "main": "expo/AppEntry",
-  "scripts": {
-    "start": "expo start --clear",
-    "android": "expo run:android",
-    "ios": "expo run:ios",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "expo": "~54.0.13",
-    "react": "19.1.0",
-    "react-native": "0.81.4",
-    "react-native-everything-player": "file:.."
-  },
-  "devDependencies": {
-    "@types/react": "~19.1.10",
-    "typescript": "~5.9.2"
-  }
+	"name": "react-native-everything-player-example",
+	"private": true,
+	"version": "1.0.0",
+	"main": "expo/AppEntry",
+	"scripts": {
+		"start": "EXPO_UNSTABLE_HEADLESS=1 expo start --dev-client --localhost --clear",
+		"android": "expo run:android",
+		"ios": "expo run:ios",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"base-64": "^1.0.0",
+		"bgutils-js": "^3.2.0",
+		"crypto-js": "^4.2.0",
+		"event-target-polyfill": "^0.0.4",
+		"expo": "~56.0.0-canary-20260414-e3dbafd",
+		"expo-build-properties": "^55.0.13",
+		"googlevideo": "^4.0.4",
+		"nodejs-mobile-react-native": "^18.20.4",
+		"path": "^0.12.7",
+		"react": "19.2.3",
+		"react-native": "0.85.1",
+		"react-native-everything-player": "file:..",
+		"react-native-nitro-modules": "^0.35.0",
+		"react-native-url-polyfill": "^3.0.0",
+		"react-native-uuid": "^2.0.4",
+		"text-encoding-polyfill": "^0.6.7",
+		"web-streams-polyfill": "^4.2.0",
+		"youtubei.js": "^17.0.1"
+	},
+	"devDependencies": {
+		"@types/react": "~19.1.10",
+		"typescript": "~5.9.2"
+	},
+	"overrides": {
+		"hermes-compiler": "250829098.0.4"
+	}
 }

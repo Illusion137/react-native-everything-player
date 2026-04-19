@@ -10,6 +10,7 @@ import com.everythingplayer.kotlinaudio.models.AudioItemOptions
 import com.everythingplayer.kotlinaudio.models.MediaType
 import com.everythingplayer.utils.BundleUtils
 import com.everythingplayer.utils.SabrFormatDescriptor
+import java.io.Serializable
 import java.util.Locale
 import java.util.UUID
 
@@ -68,6 +69,37 @@ class Track(context: Context, bundle: Bundle, ratingType: Int) : TrackMetadata()
         }
     }
 
+    private fun parseSabrFormatDescriptor(raw: Any?): SabrFormatDescriptor? {
+        val bundle = when (raw) {
+            is Bundle -> raw
+            is Map<*, *> -> Bundle().apply {
+                raw.forEach { (key, value) ->
+                    val k = key as? String ?: return@forEach
+                    when (value) {
+                        is Int -> putInt(k, value)
+                        is Long -> putLong(k, value)
+                        is Double -> putDouble(k, value)
+                        is Float -> putFloat(k, value)
+                        is String -> putString(k, value)
+                        is Boolean -> putBoolean(k, value)
+                        is Serializable -> putSerializable(k, value)
+                    }
+                }
+            }
+            else -> null
+        } ?: return null
+
+        val itag = bundle.getIntCompat("itag")?.takeIf { it != 0 } ?: return null
+        return SabrFormatDescriptor(
+            itag = itag,
+            lastModified = bundle.getLongCompat("lastModified") ?: 0L,
+            xtags = bundle.getString("xtags") ?: "",
+            mimeType = bundle.getString("mimeType"),
+            approxDurationMs = bundle.getIntCompat("approxDurationMs") ?: 0,
+            bitrate = bundle.getIntCompat("bitrate") ?: 0
+        )
+    }
+
     override fun setMetadata(context: Context, bundle: Bundle?, ratingType: Int) {
         super.setMetadata(context, bundle, ratingType)
         originalItem.putAll(bundle)
@@ -75,8 +107,12 @@ class Track(context: Context, bundle: Bundle, ratingType: Int) : TrackMetadata()
 
     fun toAudioItem(sabrStartPositionMs: Long? = null): TrackAudioItem {
         val sabrMimeType = if (isSabr) resolvePreferredSabrMimeType() else null
-        val sabrSessionId = if (isSabr) "sabr-${queueId}-${UUID.randomUUID()}" else null
+        val sabrVideoMimeType = if (isSabr) resolvePreferredSabrVideoMimeType() else null
+        val sabrBaseSessionId = if (isSabr) "sabr-${queueId}-${UUID.randomUUID()}" else null
+        val sabrSessionId = if (isSabr && sabrBaseSessionId != null) "${sabrBaseSessionId}-a" else null
+        val sabrVideoSessionId = if (isSabr && sabrBaseSessionId != null && sabrVideoMimeType != null) "${sabrBaseSessionId}-v" else null
         val audioUrl = if (isSabr) buildSabrUri(sabrSessionId ?: queueId.toString(), sabrMimeType) else uri.toString()
+        val videoUrl = if (isSabr && sabrVideoSessionId != null) buildSabrUri(sabrVideoSessionId, sabrVideoMimeType) else null
         return TrackAudioItem(
             track = this,
             type = type,
@@ -90,6 +126,9 @@ class Track(context: Context, bundle: Bundle, ratingType: Int) : TrackMetadata()
             mediaId = mediaId,
             sabrSessionId = sabrSessionId,
             sabrMimeType = sabrMimeType,
+            sabrVideoSessionId = sabrVideoSessionId,
+            sabrVideoMimeType = sabrVideoMimeType,
+            sabrVideoUrl = videoUrl,
             sabrStartPositionMs = sabrStartPositionMs
         )
     }
@@ -107,7 +146,7 @@ class Track(context: Context, bundle: Bundle, ratingType: Int) : TrackMetadata()
 
     fun resolvePreferredSabrMimeType(): String? {
         val audioFormats = sabrFormats.filter { it.mimeType?.contains("audio", ignoreCase = true) == true }
-        return audioFormats
+        val preferred = audioFormats
             .sortedWith(compareByDescending<SabrFormatDescriptor> {
                 val mime = it.mimeType.orEmpty().lowercase(Locale.US)
                 when {
@@ -118,6 +157,25 @@ class Track(context: Context, bundle: Bundle, ratingType: Int) : TrackMetadata()
                     else -> 1
                 }
             }.thenByDescending { it.bitrate })
+            .firstOrNull()
+            ?.mimeType
+        return preferred ?: if (isOpus) "audio/webm; codecs=opus" else "audio/mp4"
+    }
+
+    fun resolvePreferredSabrVideoMimeType(): String? {
+        val videoFormats = sabrFormats.filter { it.mimeType?.contains("video", ignoreCase = true) == true }
+        return videoFormats
+            .sortedWith(
+                compareByDescending<SabrFormatDescriptor> {
+                    val mime = it.mimeType.orEmpty().lowercase(Locale.US)
+                    when {
+                        "avc" in mime || "h264" in mime -> 4
+                        "mp4" in mime -> 3
+                        "webm" in mime -> 2
+                        else -> 1
+                    }
+                }.thenByDescending { it.bitrate }
+            )
             .firstOrNull()
             ?.mimeType
     }
@@ -180,20 +238,15 @@ class Track(context: Context, bundle: Bundle, ratingType: Int) : TrackMetadata()
             sabrClientName = clientInfo.getIntCompat("clientName")
             sabrClientVersion = clientInfo.getString("clientVersion")
         }
-        @Suppress("UNCHECKED_CAST")
-        val sabrFormatsArr = bundle.getSerializable("sabrFormats") as? ArrayList<Bundle>
-        if (sabrFormatsArr != null) {
-            sabrFormats = sabrFormatsArr.mapNotNull { f ->
-                val itag = f.getIntCompat("itag")?.takeIf { it != 0 } ?: return@mapNotNull null
-                SabrFormatDescriptor(
-                    itag = itag,
-                    lastModified = f.getLongCompat("lastModified") ?: 0L,
-                    xtags = f.getString("xtags") ?: "",
-                    mimeType = f.getString("mimeType"),
-                    approxDurationMs = f.getIntCompat("approxDurationMs") ?: 0,
-                    bitrate = f.getIntCompat("bitrate") ?: 0
-                )
-            }
+        @Suppress("DEPRECATION")
+        val sabrFormatsRaw = bundle.getSerializable("sabrFormats")
+        val sabrFormatsList = when (sabrFormatsRaw) {
+            is ArrayList<*> -> sabrFormatsRaw
+            is List<*> -> ArrayList(sabrFormatsRaw)
+            else -> null
+        }
+        if (sabrFormatsList != null) {
+            sabrFormats = sabrFormatsList.mapNotNull { parseSabrFormatDescriptor(it) }
         }
 
         setMetadata(context, bundle, ratingType)

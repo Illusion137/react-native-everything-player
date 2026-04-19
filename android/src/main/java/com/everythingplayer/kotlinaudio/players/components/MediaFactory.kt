@@ -22,6 +22,7 @@ import androidx.media3.exoplayer.smoothstreaming.DefaultSsChunkSource
 import androidx.media3.exoplayer.smoothstreaming.SsMediaSource
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
+import androidx.media3.exoplayer.source.MergingMediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.upstream.LoadErrorHandlingPolicy
 import androidx.media3.extractor.DefaultExtractorsFactory
@@ -31,6 +32,7 @@ import com.everythingplayer.utils.SabrDataSource
 import com.everythingplayer.utils.SabrFormatDescriptor
 import com.everythingplayer.utils.SabrPlaybackRegistry
 import com.everythingplayer.utils.SabrPlaybackSessionConfig
+import com.everythingplayer.utils.SabrStreamKind
 
 @OptIn(UnstableApi::class)
 class MediaFactory(
@@ -105,7 +107,7 @@ class MediaFactory(
 
     private fun createSabrSource(mediaItem: MediaItem): MediaSource {
         val extras = mediaItem.mediaMetadata.extras ?: error("Missing SABR metadata extras")
-        val sessionId = extras.getString("sabrSessionId") ?: error("Missing SABR session id")
+        val audioSessionId = extras.getString("sabrSessionId") ?: error("Missing SABR session id")
         val formats = @Suppress("DEPRECATION")
         (extras.getSerializable("sabrFormats") as? ArrayList<Bundle>).orEmpty().mapNotNull { format ->
             val itag = format.getInt("itag", 0).takeIf { it != 0 } ?: return@mapNotNull null
@@ -118,31 +120,59 @@ class MediaFactory(
                 bitrate = format.getInt("bitrate", 0)
             )
         }
+        val audioFormats = formats.filter { it.mimeType?.contains("audio", ignoreCase = true) == true }
+        val videoFormats = formats.filter { it.mimeType?.contains("video", ignoreCase = true) == true }
         val clientInfo = extras.getBundle("clientInfo")
         val config = SabrConfig(
             serverUrl = extras.getString("sabrServerUrl") ?: error("Missing SABR server url"),
             ustreamerConfig = extras.getString("sabrUstreamerConfig") ?: error("Missing SABR ustreamer config"),
             poToken = extras.getString("poToken"),
             cookie = extras.getString("cookie"),
-            formats = formats,
+            formats = if (audioFormats.isNotEmpty()) audioFormats else formats,
             durationMs = extras.getLong("duration", 0L).toDouble() * 1000.0,
             clientName = clientInfo?.getInt("clientName"),
             clientVersion = clientInfo?.getString("clientVersion"),
             preferOpus = (extras.getString("sabrMimeType") ?: "").contains("webm", ignoreCase = true) ||
                 (extras.getString("sabrMimeType") ?: "").contains("opus", ignoreCase = true),
-            startTimeMs = extras.getLong("sabrStartPositionMs", 0L)
+            startTimeMs = extras.getLong("sabrStartPositionMs", 0L),
+            streamKind = SabrStreamKind.AUDIO
         )
-        val session = SabrPlaybackRegistry.getOrCreate(
+        val audioSession = SabrPlaybackRegistry.getOrCreate(
             SabrPlaybackSessionConfig(
-                sessionId = sessionId,
+                sessionId = audioSessionId,
                 sabrConfig = config,
                 mimeType = extras.getString("sabrMimeType")
             )
         )
-        return ProgressiveMediaSource.Factory(
-            SabrDataSource.Factory(session),
+        val audioSource = ProgressiveMediaSource.Factory(
+            SabrDataSource.Factory(audioSession),
             DefaultExtractorsFactory().setConstantBitrateSeekingEnabled(true)
         ).createMediaSource(mediaItem)
+
+        val videoSessionId = extras.getString("sabrVideoSessionId")
+        val videoMimeType = extras.getString("sabrVideoMimeType")
+        val videoUrl = extras.getString("sabrVideoUrl")
+        if (videoSessionId.isNullOrBlank() || videoMimeType.isNullOrBlank() || videoUrl.isNullOrBlank() || videoFormats.isEmpty()) {
+            return audioSource
+        }
+
+        val videoConfig = config.copy(streamKind = SabrStreamKind.VIDEO, formats = formats, preferOpus = false)
+        val videoSession = SabrPlaybackRegistry.getOrCreate(
+            SabrPlaybackSessionConfig(
+                sessionId = videoSessionId,
+                sabrConfig = videoConfig,
+                mimeType = videoMimeType
+            )
+        )
+        val videoItem = mediaItem.buildUpon()
+            .setUri(videoUrl)
+            .setMimeType(videoMimeType)
+            .build()
+        val videoSource = ProgressiveMediaSource.Factory(
+            SabrDataSource.Factory(videoSession),
+            DefaultExtractorsFactory().setConstantBitrateSeekingEnabled(true)
+        ).createMediaSource(videoItem)
+        return MergingMediaSource(audioSource, videoSource)
     }
 
     private fun createDashSource(mediaItem: MediaItem, factory: DataSource.Factory): MediaSource {

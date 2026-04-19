@@ -32,11 +32,13 @@ class SabrOpusPlayer {
     /// Called on the main thread when the stream ends (gate fired or stream exhausted).
     var onDidFinishPlaying: (() -> Void)?
     /// Called on the main thread when playback fails with an error.
-    var onDidFailPlaying: (() -> Void)?
+    var onDidFailPlaying: ((Error?) -> Void)?
     /// Called when the stream discovers its actual duration (ms) from server metadata.
     var onDurationUpdated: ((Double) -> Void)?
     /// Called on the main thread immediately after AVAudioEngine starts successfully.
     var onEngineStarted: (() -> Void)?
+    /// Called when the SABR video stream is ready (only fires when enabled_track_types includes video).
+    var onVideoStreamReady: ((AsyncThrowingStream<Data, Error>) -> Void)?
 
     let engine = AVAudioEngine()
     let playerNode = AVAudioPlayerNode()
@@ -173,7 +175,10 @@ class SabrOpusPlayer {
         var opts = options
         opts.prefer_opus = true
         opts.prefer_web_m = true
-        opts.prefer_mp4 = nil
+        // AVPlayer video path (resource loader) expects fMP4 video segments.
+        // Keep Opus audio preferred, but force MP4 container preference when video is enabled.
+        opts.prefer_mp4 = (opts.enabled_track_types == EnabledTrackTypes.video_and_audio)
+        opts.prefer_h264 = (opts.enabled_track_types == EnabledTrackTypes.video_and_audio)
         if startTimeMs > 0 { opts.start_time_ms = startTimeMs }
 
         sabrStream?.on_stream_protection_status_update { [weak self] (status: StreamProtectionStatus) in
@@ -195,13 +200,21 @@ class SabrOpusPlayer {
         streamTask = Task(priority: .userInitiated) { [weak self] in
             guard let self else { return }
             do {
-                let (_, audio_stream, _) = try await sabrStream!.start(options: opts)
+                let (video_stream, audio_stream, selected) = try await sabrStream!.start(options: opts)
+                // Only deliver the video stream if a real video format was selected
+                // (not a fallback where the "video" format is actually audio).
+                let hasRealVideo = selected.video_format.mime_type?.lowercased().contains("video") == true
+                if opts.enabled_track_types == EnabledTrackTypes.video_and_audio && hasRealVideo {
+                    DispatchQueue.main.async { [weak self] in
+                        self?.onVideoStreamReady?(video_stream)
+                    }
+                }
                 try await self.runPipeline(audioStream: audio_stream, durationMs: durationMs, startTimeMs: startTimeMs, generation: gen)
             } catch {
                 guard !Task.isCancelled else { return }
                 log("stream error: \(error)")
                 guard self.pipelineGeneration == gen else { return }
-                onDidFailPlaying?()
+                onDidFailPlaying?(error)
             }
         }
     }
@@ -260,7 +273,7 @@ class SabrOpusPlayer {
             } catch {
                 guard !Task.isCancelled else { return }
                 guard self.pipelineGeneration == gen else { return }
-                onDidFailPlaying?()
+                onDidFailPlaying?(error)
             }
         }
     }
@@ -278,7 +291,7 @@ class SabrOpusPlayer {
                 guard !Task.isCancelled else { return }
                 log("file playback error: \(error)")
                 guard self.pipelineGeneration == gen else { return }
-                onDidFailPlaying?()
+                onDidFailPlaying?(error)
             }
         }
     }
@@ -354,7 +367,7 @@ class SabrOpusPlayer {
                     interleaved: false
                 ) else {
                     log("failed to create PCM format")
-                    onDidFailPlaying?()
+                    onDidFailPlaying?(nil)
                     return
                 }
                 pcmFormat = fmt
@@ -362,7 +375,7 @@ class SabrOpusPlayer {
                     opusDecoder = try LibOpusDecoder(sampleRate: 48000, channels: Int32(info.channelCount))
                 } catch {
                     log("LibOpusDecoder init failed: \(error)")
-                    onDidFailPlaying?()
+                    onDidFailPlaying?(error)
                     return
                 }
                 preSkipRemaining = info.preSkip
@@ -408,12 +421,12 @@ class SabrOpusPlayer {
                                 onEngineStarted?()
                             } catch let retryError {
                                 log("engine.start() failed after retry: \(retryError)")
-                                onDidFailPlaying?()
+                                onDidFailPlaying?(retryError)
                                 return
                             }
                             #else
                             log("engine.start() failed: \(error)")
-                            onDidFailPlaying?()
+                            onDidFailPlaying?(error)
                             return
                             #endif
                         }
@@ -538,7 +551,7 @@ class SabrOpusPlayer {
         } else {
             // No audio was ever produced — treat as failure
             guard pipelineGeneration == generation else { return }
-            onDidFailPlaying?()
+            onDidFailPlaying?(nil)
         }
     }
 

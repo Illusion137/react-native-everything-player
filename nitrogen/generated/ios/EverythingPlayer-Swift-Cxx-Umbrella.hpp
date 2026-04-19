@@ -10,12 +10,17 @@
 // Forward declarations of C++ defined types
 // Forward declaration of `HybridNativeEverythingPlayerSpec` to properly resolve imports.
 namespace margelo::nitro::everythingplayer { class HybridNativeEverythingPlayerSpec; }
+// Forward declaration of `HybridNativeVideoViewSpec` to properly resolve imports.
+namespace margelo::nitro::everythingplayer { class HybridNativeVideoViewSpec; }
 
 // Include C++ defined types
 #include "HybridNativeEverythingPlayerSpec.hpp"
+#include "HybridNativeVideoViewSpec.hpp"
 #include <NitroModules/AnyMap.hpp>
 #include <NitroModules/Null.hpp>
 #include <NitroModules/Promise.hpp>
+#include <NitroModules/Result.hpp>
+#include <exception>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -35,6 +40,8 @@ namespace margelo::nitro::everythingplayer { class HybridNativeEverythingPlayerS
 // Forward declarations of Swift defined types
 // Forward declaration of `HybridNativeEverythingPlayerSpec_cxx` to properly resolve imports.
 namespace EverythingPlayer { class HybridNativeEverythingPlayerSpec_cxx; }
+// Forward declaration of `HybridNativeVideoViewSpec_cxx` to properly resolve imports.
+namespace EverythingPlayer { class HybridNativeVideoViewSpec_cxx; }
 
 // Include Swift defined types
 #if __has_include("EverythingPlayer-Swift.h")

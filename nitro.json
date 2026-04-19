@@ -11,6 +11,10 @@
     "NativeEverythingPlayer": {
       "ios": { "language": "swift", "implementationClassName": "HybridEverythingPlayer" },
       "android": { "language": "kotlin", "implementationClassName": "HybridEverythingPlayer" }
+    },
+    "NativeVideoView": {
+      "ios": { "language": "swift", "implementationClassName": "HybridVideoView" },
+      "android": { "language": "kotlin", "implementationClassName": "HybridVideoView" }
     }
   }
 }

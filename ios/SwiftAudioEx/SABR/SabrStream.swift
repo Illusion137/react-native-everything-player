@@ -269,8 +269,7 @@ class SabrStream {
             }
 
             let max_retries = options.max_retries ?? default_max_retries
-            // Always audio-only: video is never needed for audio playback on Apple platforms.
-            let enabled_track_types_bitfield = EnabledTrackTypes.audio_only
+            let enabled_track_types_bitfield = options.enabled_track_types ?? EnabledTrackTypes.audio_only
 
             var abr_state = AbrState(
                 player_time_ms: player_time_ms,
@@ -436,6 +435,8 @@ class SabrStream {
     // MARK: - Format Selection
 
     private func select_formats(options: SabrPlaybackOptions) throws -> SelectedFormats {
+        var enabledTrackTypes = options.enabled_track_types ?? EnabledTrackTypes.audio_only
+
         let video_format = choose_format(format_ids, options.video_format, options: FormatOptions(
             quality: options.video_quality,
             prefer_web_m: options.prefer_web_m,
@@ -453,8 +454,31 @@ class SabrStream {
             is_audio: true
         ))
 
+        // If video+audio was requested but no compatible video format is available,
+        // fall back to audio-only rather than failing entirely.
+        if enabledTrackTypes == EnabledTrackTypes.video_and_audio && video_format == nil {
+            logger.warn(tag: tag, message: "No compatible video format found; falling back to audio-only")
+            enabledTrackTypes = EnabledTrackTypes.audio_only
+        }
+
+        let resolvedVideoFormat: SabrFormat?
+        let resolvedAudioFormat: SabrFormat?
+
+        switch enabledTrackTypes {
+        case EnabledTrackTypes.audio_only:
+            // Audio-only playback must not require a video format to exist.
+            resolvedAudioFormat = audio_format
+            resolvedVideoFormat = video_format ?? audio_format
+        case EnabledTrackTypes.video_only:
+            resolvedVideoFormat = video_format
+            resolvedAudioFormat = audio_format ?? video_format
+        default:
+            resolvedVideoFormat = video_format
+            resolvedAudioFormat = audio_format
+        }
+
         if duration_ms < 0 { throw SabrStreamError.invalid_duration }
-        guard let video_format, let audio_format else {
+        guard let video_format = resolvedVideoFormat, let audio_format = resolvedAudioFormat else {
             throw SabrStreamError.no_suitable_formats
         }
 

@@ -5,6 +5,11 @@ import NitroModules
 
 public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
 
+    // MARK: - Singleton (accessed by HybridVideoView)
+
+    /// Weak reference to the active player instance. Set on `setupPlayer`, cleared on `reset`.
+    static weak var shared: HybridEverythingPlayer? = nil
+
     // MARK: - Attributes
 
     private var hasInitialized = false
@@ -21,6 +26,11 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
 
     // Active DRM handler (retained while a DRM-protected item is playing)
     private var drmHandler: FairPlayDRMHandler?
+
+    // MARK: - Video
+
+    /// The currently attached video view (weak — the view may be unmounted at any time).
+    private weak var attachedVideoView: HybridVideoView? = nil
 
     // MARK: - Nitro Callback Properties
 
@@ -225,9 +235,9 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
 
     public lazy var setupPlayer: (_ options: AnyMap) -> Promise<Promise<Void>> = { options in
         self.wrapAsync {
-            if self.hasInitialized {
-                throw NSError(domain: "EverythingPlayer", code: 2, userInfo: [NSLocalizedDescriptionKey: "The player has already been initialized via setupPlayer."])
-            }
+            // Idempotent: if already initialized (e.g. hot reload or StrictMode double-invocation),
+            // just re-run configuration so options are applied, then return.
+            guard !self.hasInitialized else { return }
             let config = self.anyMapToDictionary(options)
 
             if let bufferDuration = config["minBuffer"] as? TimeInterval {
@@ -328,6 +338,7 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
             }
 
             self.hasInitialized = true
+            HybridEverythingPlayer.shared = self
         }
     }
 
@@ -746,7 +757,6 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
 
     public lazy var downloadSabrStream: (_ params: AnyMap, _ outputPath: String) -> Promise<Promise<String>> = { params, outputPath in
         self.wrapAsync {
-            try self.throwWhenNotInitialized()
             let paramsDict = self.anyMapToDictionary(params)
             guard let serverUrl = paramsDict["sabrServerUrl"] as? String,
                   let ustreamerConfig = paramsDict["sabrUstreamerConfig"] as? String else {
@@ -866,11 +876,14 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
         switch player.playbackError {
         case .failedToLoadKeyValue:
             return ["message": "Failed to load resource", "code": "ios_failed_to_load_resource"]
-        case .invalidSourceUrl:
-            return ["message": "The source url was invalid", "code": "ios_invalid_source_url"]
+        case .invalidSourceUrl(let sourceUrl):
+            return ["message": "The source URL was invalid: \(sourceUrl)", "code": "ios_invalid_source_url"]
         case .notConnectedToInternet:
             return ["message": "A network resource was requested, but an internet connection has not been established.", "code": "ios_not_connected_to_internet"]
         case .playbackFailed:
+            if let detail = player.playbackErrorDescription, !detail.isEmpty {
+                return ["message": "Playback of the track failed (\(detail))", "code": "ios_playback_failed"]
+            }
             return ["message": "Playback of the track failed", "code": "ios_playback_failed"]
         case .itemWasUnplayable:
             return ["message": "The track could not be played", "code": "ios_track_unplayable"]
@@ -915,7 +928,26 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
     }
 
     func handleAudioPlayerFailed(error: Error?) {
-        emit(event: .PlaybackError, body: ["error": error?.localizedDescription as Any])
+        var body: [String: Any] = [:]
+        let details = getPlaybackStateErrorKeyValues()
+        body["code"] = details["code"]
+        body["message"] = details["message"]
+        body["error"] = details["message"]
+        if let localized = error?.localizedDescription {
+            body["nativeErrorDescription"] = localized
+        }
+        if let nsError = error as NSError? {
+            body["nativeCode"] = nsError.code
+            body["nativeDomain"] = nsError.domain
+            if let underlying = nsError.userInfo[NSUnderlyingErrorKey] as? NSError {
+                body["underlyingCode"] = underlying.code
+                body["underlyingDomain"] = underlying.domain
+                if let underlyingMessage = underlying.userInfo[NSLocalizedDescriptionKey] as? String {
+                    body["underlyingMessage"] = underlyingMessage
+                }
+            }
+        }
+        emit(event: .PlaybackError, body: body)
     }
 
     func handleAudioPlayerCurrentItemChange(
@@ -955,6 +987,21 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
         if let track = (item as? Track)?.toObject() { body["track"] = track }
         emit(event: .PlaybackActiveTrackChanged, body: body)
 
+        // Update attached video view when the track changes.
+        if let videoView = attachedVideoView {
+            let isSabrTrack = (item as? Track)?.isSabr == true
+            if isSabrTrack {
+                player.avPlayerWrapper.ensureSabrVideoStreamAttachedForCurrentItem()
+            } else {
+                videoView.connectAVPlayer(player.avPlayerWrapper.avPlayer)
+            }
+            item?.getArtwork { image in
+                DispatchQueue.main.async {
+                    videoView.showThumbnail(image: image)
+                }
+            }
+        }
+
         // Force-emit playing state after crossfade so JS layer reflects correct state
         if item != nil && player.playerState == .playing {
             DispatchQueue.main.async { [weak self] in
@@ -976,7 +1023,48 @@ public class HybridEverythingPlayer: HybridNativeEverythingPlayerSpec {
 
     func handlePlayWhenReadyChange(playWhenReady: Bool) {
         configureAudioSession()
+        attachedVideoView?.setSabrPlaybackState(playWhenReady: playWhenReady)
         emit(event: .PlaybackPlayWhenReadyChanged, body: ["playWhenReady": playWhenReady])
+    }
+}
+
+// MARK: - Video View
+
+extension HybridEverythingPlayer {
+
+    /// Called by `HybridVideoView.onAttach()` when the view is mounted in React.
+    func videoViewDidAttach(_ videoView: HybridVideoView) {
+        attachedVideoView = videoView
+        player.avPlayerWrapper.videoEnabled = true
+
+        // Wire SABR video stream callback so that when a SABR track starts,
+        // the video stream is handed off to the view automatically.
+        player.avPlayerWrapper.onSabrVideoStreamReady = { [weak self] videoStream in
+            self?.attachedVideoView?.connectSabrVideoStream(
+                videoStream,
+                playWhenReady: self?.player.playWhenReady ?? true
+            )
+        }
+        player.avPlayerWrapper.ensureSabrVideoStreamAttachedForCurrentItem()
+
+        // Connect the existing AVPlayer so non-SABR tracks render immediately.
+        videoView.connectAVPlayer(player.avPlayerWrapper.avPlayer)
+
+        // Show the current track's artwork while video loads or for audio-only tracks.
+        player.currentItem?.getArtwork { image in
+            DispatchQueue.main.async {
+                videoView.showThumbnail(image: image)
+            }
+        }
+    }
+
+    /// Called by `HybridVideoView.onDetach()` or `onDropView()` when the view unmounts.
+    func videoViewDidDetach(_ videoView: HybridVideoView) {
+        guard attachedVideoView === videoView else { return }
+        attachedVideoView = nil
+        player.avPlayerWrapper.videoEnabled = false
+        player.avPlayerWrapper.onSabrVideoStreamReady = nil
+        videoView.clearVideo()
     }
 }
 

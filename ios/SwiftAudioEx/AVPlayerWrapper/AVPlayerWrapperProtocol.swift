@@ -28,6 +28,7 @@ protocol AVPlayerWrapperProtocol: AnyObject {
     var reasonForWaitingToPlay: AVPlayer.WaitingReason? { get }
     
     var playbackError: AudioPlayerError.PlaybackError? { get }
+    var playbackErrorDescription: String? { get }
     
     var rate: Float { get set }
     

@@ -7,5 +7,11 @@ set(CMAKE_CXX_STANDARD 20)
 # Create the shared library
 add_library(EverythingPlayer SHARED)
 
+# JNI entrypoint that registers Nitrogen-generated Hybrid Objects.
+target_sources(
+  EverythingPlayer PRIVATE
+  src/main/cpp/cpp-adapter.cpp
+)
+
 # Include nitrogen-generated autolinking (adds sources, headers, and links)
 include(${CMAKE_SOURCE_DIR}/../nitrogen/generated/android/EverythingPlayer+autolinking.cmake)

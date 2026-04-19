@@ -10,17 +10,23 @@
 // Forward declarations of C++ defined types
 // Forward declaration of `HybridNativeEverythingPlayerSpec` to properly resolve imports.
 namespace margelo::nitro::everythingplayer { class HybridNativeEverythingPlayerSpec; }
+// Forward declaration of `HybridNativeVideoViewSpec` to properly resolve imports.
+namespace margelo::nitro::everythingplayer { class HybridNativeVideoViewSpec; }
 
 // Forward declarations of Swift defined types
 // Forward declaration of `HybridNativeEverythingPlayerSpec_cxx` to properly resolve imports.
 namespace EverythingPlayer { class HybridNativeEverythingPlayerSpec_cxx; }
+// Forward declaration of `HybridNativeVideoViewSpec_cxx` to properly resolve imports.
+namespace EverythingPlayer { class HybridNativeVideoViewSpec_cxx; }
 
 // Include C++ defined types
 #include "HybridNativeEverythingPlayerSpec.hpp"
+#include "HybridNativeVideoViewSpec.hpp"
 #include <NitroModules/AnyMap.hpp>
 #include <NitroModules/Null.hpp>
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/PromiseHolder.hpp>
+#include <NitroModules/Result.hpp>
 #include <exception>
 #include <functional>
 #include <memory>
@@ -1294,5 +1300,26 @@ namespace margelo::nitro::everythingplayer::bridge::swift {
   // pragma MARK: std::weak_ptr<HybridNativeEverythingPlayerSpec>
   using std__weak_ptr_HybridNativeEverythingPlayerSpec_ = std::weak_ptr<HybridNativeEverythingPlayerSpec>;
   inline std__weak_ptr_HybridNativeEverythingPlayerSpec_ weakify_std__shared_ptr_HybridNativeEverythingPlayerSpec_(const std::shared_ptr<HybridNativeEverythingPlayerSpec>& strong) noexcept { return strong; }
+  
+  // pragma MARK: std::shared_ptr<HybridNativeVideoViewSpec>
+  /**
+   * Specialized version of `std::shared_ptr<HybridNativeVideoViewSpec>`.
+   */
+  using std__shared_ptr_HybridNativeVideoViewSpec_ = std::shared_ptr<HybridNativeVideoViewSpec>;
+  std::shared_ptr<HybridNativeVideoViewSpec> create_std__shared_ptr_HybridNativeVideoViewSpec_(void* NON_NULL swiftUnsafePointer) noexcept;
+  void* NON_NULL get_std__shared_ptr_HybridNativeVideoViewSpec_(std__shared_ptr_HybridNativeVideoViewSpec_ cppType);
+  
+  // pragma MARK: std::weak_ptr<HybridNativeVideoViewSpec>
+  using std__weak_ptr_HybridNativeVideoViewSpec_ = std::weak_ptr<HybridNativeVideoViewSpec>;
+  inline std__weak_ptr_HybridNativeVideoViewSpec_ weakify_std__shared_ptr_HybridNativeVideoViewSpec_(const std::shared_ptr<HybridNativeVideoViewSpec>& strong) noexcept { return strong; }
+  
+  // pragma MARK: Result<void>
+  using Result_void_ = Result<void>;
+  inline Result_void_ create_Result_void_() noexcept {
+    return Result<void>::withValue();
+  }
+  inline Result_void_ create_Result_void_(const std::exception_ptr& error) noexcept {
+    return Result<void>::withError(error);
+  }
 
 } // namespace margelo::nitro::everythingplayer::bridge::swift

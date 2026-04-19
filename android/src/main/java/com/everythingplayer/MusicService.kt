@@ -369,13 +369,46 @@ class MusicService : HeadlessJsMediaService() {
         }
     }
 
+    // ── Video Surface ─────────────────────────────────────────────────────────
+
+    fun getExoPlayer(): androidx.media3.exoplayer.ExoPlayer? {
+        return if (this::player.isInitialized) player.exoPlayer else null
+    }
+
+    @MainThread
+    fun setVideoSurfaceView(surfaceView: android.view.SurfaceView) {
+        if (this::player.isInitialized) {
+            player.exoPlayer.setVideoSurfaceView(surfaceView)
+        }
+    }
+
+    @MainThread
+    fun clearVideoSurface() {
+        if (this::player.isInitialized) {
+            player.exoPlayer.clearVideoSurface()
+        }
+    }
+
+    @MainThread
+    fun enableCurrentSabrVideoPlayback() {
+        if (!this::player.isInitialized) return
+        val track = currentTrack ?: return
+        if (!track.isSabr) return
+        val currentItem = player.currentItem as? TrackAudioItem ?: return
+        if (currentItem.sabrVideoSessionId.isNullOrBlank()) return
+        restartCurrentSabrPlayback(player.position)
+    }
+
     // ── SABR Playback ─────────────────────────────────────────────────────────
     private var currentSabrKey: Long? = null
     private var currentSabrSessionId: String? = null
+    private var currentSabrVideoSessionId: String? = null
 
     @MainThread
     fun updatePlaybackPoToken(poToken: String) {
-        currentSabrSessionId?.let { SabrPlaybackRegistry.get(it)?.updatePoToken(poToken) }
+        listOfNotNull(currentSabrSessionId, currentSabrVideoSessionId).forEach { sessionId ->
+            SabrPlaybackRegistry.get(sessionId)?.updatePoToken(poToken)
+        }
         // Also store on any queued SABR tracks so they pick it up when they start
         if (this::player.isInitialized) {
             tracks.forEach { if (it.isSabr) it.poToken = poToken }
@@ -384,7 +417,9 @@ class MusicService : HeadlessJsMediaService() {
 
     @MainThread
     fun updateSabrStreamPlayback(serverUrl: String, ustreamerConfig: String) {
-        currentSabrSessionId?.let { SabrPlaybackRegistry.get(it)?.updateStream(serverUrl, ustreamerConfig) }
+        listOfNotNull(currentSabrSessionId, currentSabrVideoSessionId).forEach { sessionId ->
+            SabrPlaybackRegistry.get(sessionId)?.updateStream(serverUrl, ustreamerConfig)
+        }
         // Update queued SABR tracks so they pick it up when they start
         if (this::player.isInitialized) {
             tracks.forEach {
@@ -402,6 +437,7 @@ class MusicService : HeadlessJsMediaService() {
         val trackAudioItem = player.currentItem as? TrackAudioItem ?: return
         val sessionId = trackAudioItem.sabrSessionId ?: return
         currentSabrSessionId = sessionId
+        currentSabrVideoSessionId = trackAudioItem.sabrVideoSessionId
         val session = SabrPlaybackRegistry.get(sessionId) ?: return
 
         session.onRefreshPoToken = { reason ->
@@ -489,6 +525,7 @@ class MusicService : HeadlessJsMediaService() {
                     attachSabrPlaybackSession(track)
                 } else {
                     currentSabrSessionId = null
+                    currentSabrVideoSessionId = null
                 }
                 if (reason !is AudioItemTransitionReason.REPEAT) {
                     emitPlaybackTrackChangedEvents(player.previousIndex, (reason?.oldPosition ?: 0).toSeconds())
@@ -681,6 +718,7 @@ class MusicService : HeadlessJsMediaService() {
             player.destroy()
         }
         currentSabrSessionId = null
+        currentSabrVideoSessionId = null
         SabrPlaybackRegistry.clear()
         cleanupSabrTempFiles()
         progressUpdateJob?.cancel()
@@ -693,9 +731,12 @@ class MusicService : HeadlessJsMediaService() {
         val currentIdx = player.currentIndex
         if (currentIdx < 0) return
 
-        currentSabrSessionId?.let { SabrPlaybackRegistry.remove(it) }
+        listOfNotNull(currentSabrSessionId, currentSabrVideoSessionId).forEach {
+            SabrPlaybackRegistry.remove(it)
+        }
         val item = track.toAudioItem(sabrStartPositionMs = startPositionMs.coerceAtLeast(0))
         currentSabrSessionId = item.sabrSessionId
+        currentSabrVideoSessionId = item.sabrVideoSessionId
         player.replaceItem(currentIdx, item)
         if (player.playWhenReady) {
             player.play()

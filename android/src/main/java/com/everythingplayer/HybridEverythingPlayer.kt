@@ -24,6 +24,7 @@ import com.everythingplayer.utils.SabrDownloader
 import com.everythingplayer.utils.SabrFormatDescriptor
 import com.margelo.nitro.NitroModules
 import com.margelo.nitro.com.everythingplayer.HybridNativeEverythingPlayerSpec
+import com.margelo.nitro.com.everythingplayer.HybridVideoView
 import com.margelo.nitro.com.everythingplayer.Variant_NullType__event__AnyMap_____Unit
 import com.margelo.nitro.com.everythingplayer.Variant_NullType_______Unit
 import com.margelo.nitro.com.everythingplayer.Variant_NullType_AnyMap
@@ -35,10 +36,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 @Suppress("unused")
-class HybridEverythingPlayer : HybridNativeEverythingPlayerSpec(), ServiceConnection {
+open class HybridEverythingPlayer : HybridNativeEverythingPlayerSpec(), ServiceConnection {
 
     // ─── Nitro Callback Properties ────────────────────────────────────────────
 
@@ -80,6 +82,9 @@ class HybridEverythingPlayer : HybridNativeEverythingPlayerSpec(), ServiceConnec
     private val sabrDownloaders = mutableMapOf<String, SabrDownloader>()
     private val context get() = NitroModules.applicationContext!!
 
+    /** Weak-ish reference to the currently attached VideoView (nullable). */
+    private var attachedVideoView: HybridVideoView? = null
+
     // ─── Service Connection ───────────────────────────────────────────────────
 
     override fun onServiceConnected(name: ComponentName, service: IBinder) {
@@ -109,7 +114,19 @@ class HybridEverythingPlayer : HybridNativeEverythingPlayerSpec(), ServiceConnec
             MusicEvents.PLAYBACK_STATE -> onPlaybackStateChanged.asSecondOrNull()?.invoke(anyMap)
             MusicEvents.PLAYBACK_ERROR -> onPlaybackError.asSecondOrNull()?.invoke(anyMap)
             MusicEvents.PLAYBACK_QUEUE_ENDED -> onPlaybackQueueEnded.asSecondOrNull()?.invoke(anyMap)
-            MusicEvents.PLAYBACK_ACTIVE_TRACK_CHANGED -> onActiveTrackChanged.asSecondOrNull()?.invoke(anyMap)
+            MusicEvents.PLAYBACK_ACTIVE_TRACK_CHANGED -> {
+                onActiveTrackChanged.asSecondOrNull()?.invoke(anyMap)
+                attachedVideoView?.let { view ->
+                    val track = anyMap.toHashMap()["track"] as? Map<*, *>
+                    val artwork = track?.get("artwork") as? String
+                    view.showThumbnail(artwork)
+                    if (!trackPayloadHasVideo(track)) {
+                        view.clearVideo()
+                    }
+                    // For video tracks, the first-frame listener on ExoPlayer will
+                    // call showVideoSurface() once a frame is actually decoded.
+                }
+            }
             MusicEvents.PLAYBACK_PLAY_WHEN_READY_CHANGED -> onPlayWhenReadyChanged.asSecondOrNull()?.invoke(anyMap)
             MusicEvents.PLAYBACK_PROGRESS_UPDATED -> onProgressUpdated.asSecondOrNull()?.invoke(anyMap)
             MusicEvents.PLAYBACK_METADATA -> onPlaybackMetadata.asSecondOrNull()?.invoke(anyMap)
@@ -183,6 +200,16 @@ class HybridEverythingPlayer : HybridNativeEverythingPlayerSpec(), ServiceConnec
     private fun anyMapToTrack(map: AnyMap): Track = bundleToTrack(anyMapToBundle(map))
 
     private fun <T> wrapAsync(run: suspend () -> T): Promise<Promise<T>> {
+        return Promise.resolved(
+            Promise.async {
+                withContext(Dispatchers.Main.immediate) {
+                    run()
+                }
+            }
+        )
+    }
+
+    private fun <T> wrapBackgroundAsync(run: suspend () -> T): Promise<Promise<T>> {
         return Promise.resolved(Promise.async(run = run))
     }
 
@@ -193,19 +220,18 @@ class HybridEverythingPlayer : HybridNativeEverythingPlayerSpec(), ServiceConnec
             if (isServiceBound) throw RuntimeException("player_already_initialized")
             AppForegroundTracker.start()
             val playerOptions = anyMapToBundle(options)
-            scope.launch(Dispatchers.Main) {
-                Intent(context, MusicService::class.java).also { intent ->
-                    context.bindService(intent, this@HybridEverythingPlayer, Context.BIND_AUTO_CREATE)
-                }
+            Intent(context, MusicService::class.java).also { intent ->
+                context.bindService(intent, this@HybridEverythingPlayer, Context.BIND_AUTO_CREATE)
             }
             // Wait for service to connect
             var waited = 0
             while (!isServiceBound && waited < 10000) {
-                Thread.sleep(50)
+                delay(50)
                 waited += 50
             }
             if (!isServiceBound) throw RuntimeException("player_setup_timeout")
             musicService.setupPlayer(playerOptions)
+            shared = this@HybridEverythingPlayer
         }
     }
 
@@ -518,7 +544,7 @@ class HybridEverythingPlayer : HybridNativeEverythingPlayerSpec(), ServiceConnec
     // ─── SABR ─────────────────────────────────────────────────────────────────
 
     override var downloadSabrStream = { params: AnyMap, outputPath: String ->
-        wrapAsync {
+        wrapBackgroundAsync {
             val p = params.toHashMap()
             val serverUrl = p["sabrServerUrl"] as? String
                 ?: throw RuntimeException("Missing sabrServerUrl")
@@ -581,7 +607,7 @@ class HybridEverythingPlayer : HybridNativeEverythingPlayerSpec(), ServiceConnec
     }
 
     override var updateSabrDownloadStream = { outputPath: String, serverUrl: String, ustreamerConfig: String ->
-        wrapAsync {
+        wrapBackgroundAsync {
             val downloader = sabrDownloaders[outputPath]
                 ?: throw RuntimeException("No active SABR download for: $outputPath")
             downloader.updateStream(serverUrl, ustreamerConfig)
@@ -589,7 +615,7 @@ class HybridEverythingPlayer : HybridNativeEverythingPlayerSpec(), ServiceConnec
     }
 
     override var updateSabrDownloadPoToken = { outputPath: String, poToken: String ->
-        wrapAsync {
+        wrapBackgroundAsync {
             val downloader = sabrDownloaders[outputPath]
                 ?: throw RuntimeException("No active SABR download for: $outputPath")
             downloader.updatePoToken(poToken)
@@ -655,5 +681,80 @@ class HybridEverythingPlayer : HybridNativeEverythingPlayerSpec(), ServiceConnec
             try { context.unbindService(this) } catch (_: Exception) {}
             isServiceBound = false
         }
+        if (shared === this) shared = null
+    }
+
+    // ─── Video View ───────────────────────────────────────────────────────────
+
+    fun videoViewDidAttach(videoView: HybridVideoView) {
+        attachedVideoView = videoView
+        if (isServiceBound) {
+            scope.launch(Dispatchers.Main) {
+                // Show current track thumbnail immediately as fallback.
+                val artwork = musicService.currentTrack?.originalItem?.getString("artwork")
+                videoView.showThumbnail(artwork)
+
+                if (trackLikelyHasVideo(musicService.currentTrack)) {
+                    // Connect ExoPlayer's video output via the first-frame-aware attach.
+                    // Thumbnail stays visible until ExoPlayer's onRenderedFirstFrame fires.
+                    val exoPlayer = musicService.getExoPlayer()
+                    if (exoPlayer != null) {
+                        videoView.attachToExoPlayer(exoPlayer)
+                    }
+                } else {
+                    videoView.clearVideo()
+                }
+
+                // If SABR audio is already running, restart at current position with
+                // fresh SABR sessions so video starts being requested immediately.
+                musicService.enableCurrentSabrVideoPlayback()
+            }
+        }
+    }
+
+    fun videoViewDidDetach(videoView: HybridVideoView) {
+        if (attachedVideoView !== videoView) return
+        attachedVideoView = null
+        if (isServiceBound) {
+            scope.launch(Dispatchers.Main) {
+                musicService.clearVideoSurface()
+            }
+        }
+        videoView.clearVideo()
+    }
+
+    companion object {
+        /** Set in setupPlayer; used by HybridVideoView for auto-connect. */
+        var shared: HybridEverythingPlayer? = null
+    }
+
+    private fun trackPayloadHasVideo(track: Map<*, *>?): Boolean {
+        if (track == null) return false
+        if ((track["isSabr"] as? Boolean) == true) {
+            val sabrFormats = track["sabrFormats"] as? List<*>
+            return sabrFormats?.any { format ->
+                val mime = (format as? Map<*, *>)?.get("mimeType") as? String
+                mime?.contains("video", ignoreCase = true) == true
+            } == true
+        }
+        val contentType = (track["contentType"] as? String)?.lowercase()
+        if (contentType != null) {
+            if (contentType.startsWith("audio/")) return false
+            if (contentType.startsWith("video/")) return true
+        }
+        val url = (track["url"] as? String)?.lowercase() ?: return true
+        return !(url.endsWith(".mp3") || url.endsWith(".m4a") || url.endsWith(".aac") || url.endsWith(".opus") || url.endsWith(".ogg") || url.endsWith(".wav") || url.endsWith(".flac"))
+    }
+
+    private fun trackLikelyHasVideo(track: Track?): Boolean {
+        if (track == null) return false
+        if (track.isSabr) return track.resolvePreferredSabrVideoMimeType() != null
+        val contentType = track.contentType?.lowercase()
+        if (contentType != null) {
+            if (contentType.startsWith("audio/")) return false
+            if (contentType.startsWith("video/")) return true
+        }
+        val url = track.uri?.toString()?.lowercase() ?: return true
+        return !(url.endsWith(".mp3") || url.endsWith(".m4a") || url.endsWith(".aac") || url.endsWith(".opus") || url.endsWith(".ogg") || url.endsWith(".wav") || url.endsWith(".flac"))
     }
 }

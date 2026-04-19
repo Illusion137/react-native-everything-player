@@ -28,6 +28,9 @@ Pod::Spec.new do |s|
       "$(PODS_TARGET_SRCROOT)/ios/SwiftAudioEx/Sources/Copus/celt",
       "$(PODS_TARGET_SRCROOT)/ios/SwiftAudioEx/Sources/Copus/silk",
       "$(PODS_TARGET_SRCROOT)/ios/SwiftAudioEx/Sources/Copus/silk/float",
+      # React Native 0.85 prebuilt ships yoga/style/Style.h inside the
+      # React-Core-prebuilt/Yoga subtree rather than the standalone Yoga pod.
+      "$(PODS_ROOT)/Headers/Public/React-Core-prebuilt/Yoga",
     ].join(" "),
     "GCC_PREPROCESSOR_DEFINITIONS" => "$(inherited) OPUS_BUILD VAR_ARRAYS=1 FLOATING_POINT HAVE_LRINT=1 HAVE_LRINTF=1",
     "OTHER_CFLAGS" => "$(inherited) -w -Xanalyzer -analyzer-disable-checker"

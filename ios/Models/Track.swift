@@ -37,6 +37,8 @@ class Track: AudioItem, TimePitching, AssetOptionsProviding, Trimmable {
     var sabrUstreamerConfig: String?
     var sabrFormats: [[String: Any]]?
     var poToken: String?
+    var clientInfo: [String: Any]?
+    var cookie: String?
 
     private var originalObject: [String: Any] = [:]
 
@@ -58,6 +60,8 @@ class Track: AudioItem, TimePitching, AssetOptionsProviding, Trimmable {
         self.sabrUstreamerConfig = dictionary["sabrUstreamerConfig"] as? String
         self.sabrFormats = dictionary["sabrFormats"] as? [[String: Any]]
         self.poToken = dictionary["poToken"] as? String
+        self.clientInfo = dictionary["clientInfo"] as? [String: Any]
+        self.cookie = dictionary["cookie"] as? String
         updateMetadata(dictionary: dictionary)
     }
 
@@ -149,6 +153,12 @@ class Track: AudioItem, TimePitching, AssetOptionsProviding, Trimmable {
             options["sabrUstreamerConfig"] = sabrUstreamerConfig ?? ""
             options["sabrFormats"] = sabrFormats ?? []
             options["poToken"] = poToken ?? ""
+            if let clientInfo = clientInfo {
+                options["clientInfo"] = clientInfo
+            }
+            if let cookie = cookie {
+                options["cookie"] = cookie
+            }
         }
         return options
     }

@@ -11,6 +11,7 @@
 #import <type_traits>
 
 #include "HybridNativeEverythingPlayerSpecSwift.hpp"
+#include "HybridNativeVideoViewSpecSwift.hpp"
 
 @interface EverythingPlayerAutolinking : NSObject
 @end
@@ -25,6 +26,13 @@
     "NativeEverythingPlayer",
     []() -> std::shared_ptr<HybridObject> {
       std::shared_ptr<HybridNativeEverythingPlayerSpec> hybridObject = EverythingPlayer::EverythingPlayerAutolinking::createNativeEverythingPlayer();
+      return hybridObject;
+    }
+  );
+  HybridObjectRegistry::registerHybridObjectConstructor(
+    "NativeVideoView",
+    []() -> std::shared_ptr<HybridObject> {
+      std::shared_ptr<HybridNativeVideoViewSpec> hybridObject = EverythingPlayer::EverythingPlayerAutolinking::createNativeVideoView();
       return hybridObject;
     }
   );

@@ -9,6 +9,11 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application>
+        <provider
+            android:name="com.everythingplayer.EverythingPlayerInitProvider"
+            android:authorities="${applicationId}.everythingplayer.init"
+            android:exported="false"
+            android:initOrder="100" />
 
         <!-- Main playback service: handles audio playback, queue, and media controls -->
         <service

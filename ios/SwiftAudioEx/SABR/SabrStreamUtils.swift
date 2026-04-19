@@ -20,8 +20,22 @@ func choose_format(
 
     guard !candidates.isEmpty else { return nil }
 
-    // WebM/Opus is handled by SabrOpusPlayer (AVAudioEngine + AudioToolbox pipeline).
-    // No exclusion needed here; callers opt into WebM via prefer_opus/prefer_web_m.
+    // For video: AVPlayer can only decode H.264/AVC and HEVC in MP4 containers.
+    // Hard-filter out VP9, AV1, WebM — these will produce a black surface.
+    if !options.is_audio {
+        let avPlayerCompatible = candidates.filter { format in
+            guard let mime = format.mime_type?.lowercased() else { return false }
+            // Must be MP4 container with AVC/H.264 or HEVC/H.265 codec
+            return mime.contains("mp4") && (mime.contains("avc") || mime.contains("h264") || mime.contains("hev") || mime.contains("h265"))
+        }
+        if !avPlayerCompatible.isEmpty {
+            candidates = avPlayerCompatible
+        } else {
+            // No AVPlayer-compatible video format available — return nil so caller
+            // falls back to audio-only instead of selecting an unplayable format.
+            return nil
+        }
+    }
 
     // Filter by language
     if let language = options.language {
@@ -58,12 +72,24 @@ func choose_format(
     }
 
     // Container preference
-    if options.prefer_webm == true {
-        let webm = candidates.filter { $0.mime_type?.contains("webm") ?? false }
-        if !webm.isEmpty { candidates = webm }
-    } else if options.prefer_mp4 == true {
-        let mp4 = candidates.filter { $0.mime_type?.contains("mp4") ?? false }
-        if !mp4.isEmpty { candidates = mp4 }
+    if options.is_audio {
+        if options.prefer_webm == true {
+            let webm = candidates.filter { $0.mime_type?.contains("webm") ?? false }
+            if !webm.isEmpty { candidates = webm }
+        } else if options.prefer_mp4 == true {
+            let mp4 = candidates.filter { $0.mime_type?.contains("mp4") ?? false }
+            if !mp4.isEmpty { candidates = mp4 }
+        }
+    } else {
+        // For SABR video rendering through AVPlayer, prefer MP4 when requested
+        // even if global WebM preference is enabled for Opus audio.
+        if options.prefer_mp4 == true {
+            let mp4 = candidates.filter { $0.mime_type?.contains("mp4") ?? false }
+            if !mp4.isEmpty { candidates = mp4 }
+        } else if options.prefer_webm == true {
+            let webm = candidates.filter { $0.mime_type?.contains("webm") ?? false }
+            if !webm.isEmpty { candidates = webm }
+        }
     }
 
     // Sort: audio by bitrate desc, video by height desc

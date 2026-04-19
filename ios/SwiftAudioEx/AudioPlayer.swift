@@ -15,7 +15,7 @@ class AudioPlayer: AVPlayerWrapperDelegate {
     // MARK: - Properties
     
     /// The wrapper around AVPlayer with integrated equalizer support via MTAudioProcessingTap
-    fileprivate var avPlayerWrapper: AVPlayerWrapper
+    internal var avPlayerWrapper: AVPlayerWrapper
 
     var eqBandsSnapshot: [Float] = Array(repeating: 0, count: 10)
     var eqEnabledSnapshot: Bool = true
@@ -69,6 +69,10 @@ class AudioPlayer: AVPlayerWrapperDelegate {
 
     public var playbackError: AudioPlayerError.PlaybackError? {
         wrapper.playbackError
+    }
+
+    public var playbackErrorDescription: String? {
+        wrapper.playbackErrorDescription
     }
     
     public var currentTime: Double {

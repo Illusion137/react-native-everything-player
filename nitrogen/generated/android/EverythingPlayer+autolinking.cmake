@@ -34,12 +34,16 @@ target_sources(
   ../nitrogen/generated/android/EverythingPlayerOnLoad.cpp
   # Shared Nitrogen C++ sources
   ../nitrogen/generated/shared/c++/HybridNativeEverythingPlayerSpec.cpp
+  ../nitrogen/generated/shared/c++/HybridNativeVideoViewSpec.cpp
+  ../nitrogen/generated/shared/c++/views/HybridNativeVideoViewComponent.cpp
   # Android-specific Nitrogen C++ sources
   ../nitrogen/generated/android/c++/JHybridNativeEverythingPlayerSpec.cpp
   ../nitrogen/generated/android/c++/JVariant_NullType_Double.cpp
   ../nitrogen/generated/android/c++/JVariant_NullType_AnyMap.cpp
   ../nitrogen/generated/android/c++/JVariant_NullType__event__AnyMap_____Unit.cpp
   ../nitrogen/generated/android/c++/JVariant_NullType_______Unit.cpp
+  ../nitrogen/generated/android/c++/JHybridNativeVideoViewSpec.cpp
+  ../nitrogen/generated/android/c++/views/JHybridNativeVideoViewStateUpdater.cpp
 )
 
 # From node_modules/react-native/ReactAndroid/cmake-utils/folly-flags.cmake

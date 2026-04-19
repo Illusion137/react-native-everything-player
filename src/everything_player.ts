@@ -12,6 +12,14 @@ const TrackPlayer = NitroModules.createHybridObject<NativeEverythingPlayer>("Nat
 
 const isAndroid = Platform.OS === "android";
 
+let _isSetup = false;
+
+function assertSetup(): void {
+	if (!_isSetup) {
+		throw new Error("The player has not been set up. Call setupPlayer() first.");
+	}
+}
+
 // MARK: - Helpers
 
 function resolveImportedAssetOrPath(pathOrAsset: string | number | undefined) {
@@ -32,8 +40,15 @@ function normalizeNitroValue(value: unknown): unknown {
 	if (typeof value === "number") return Number.isFinite(value) ? value : null;
 	if (Array.isArray(value)) return value.map((item) => normalizeNitroValue(item));
 	if (typeof value === "object") {
+		const objectValue =
+			typeof (value as { toJSON?: () => unknown }).toJSON === "function"
+				? (value as { toJSON: () => unknown }).toJSON()
+				: value;
+
+		if (Array.isArray(objectValue)) return objectValue.map((item) => normalizeNitroValue(item));
+
 		const normalized: Record<string, unknown> = {};
-		for (const [key, nestedValue] of Object.entries(value)) {
+		for (const [key, nestedValue] of Object.entries(objectValue as Record<string, unknown>)) {
 			if (nestedValue !== undefined) normalized[key] = normalizeNitroValue(nestedValue);
 		}
 		return normalized;
@@ -51,7 +66,6 @@ const listenerMap = new Map<Event, Set<(data: any) => void>>();
 const eventCallbackMap: Partial<Record<Event, keyof NativeEverythingPlayer>> = {
 	[Event.PlaybackState]: "onPlaybackStateChanged",
 	[Event.PlaybackError]: "onPlaybackError",
-	[Event.PlayerError]: "onPlaybackError",
 	[Event.PlaybackQueueEnded]: "onPlaybackQueueEnded",
 	[Event.PlaybackActiveTrackChanged]: "onActiveTrackChanged",
 	[Event.PlaybackPlayWhenReadyChanged]: "onPlayWhenReadyChanged",
@@ -80,10 +94,23 @@ const eventCallbackMap: Partial<Record<Event, keyof NativeEverythingPlayer>> = {
 	[Event.SabrRefreshPoToken]: "onSabrRefreshPoToken"
 };
 
-function syncNitroCallback(cbProp: keyof NativeEverythingPlayer, listeners: Set<(d: any) => void>) {
-	if (listeners.size > 0) {
+function eventsForCallback(cbProp: keyof NativeEverythingPlayer): Event[] {
+	return (Object.entries(eventCallbackMap) as [Event, keyof NativeEverythingPlayer | undefined][])
+		.filter(([, prop]) => prop === cbProp)
+		.map(([event]) => event);
+}
+
+function syncNitroCallback(cbProp: keyof NativeEverythingPlayer) {
+	const mappedEvents = eventsForCallback(cbProp);
+	const hasListeners = mappedEvents.some((event) => (listenerMap.get(event)?.size ?? 0) > 0);
+
+	if (hasListeners) {
 		(TrackPlayer as any)[cbProp] = (data: any) => {
-			for (const l of listeners) l(data);
+			for (const event of mappedEvents) {
+				const listeners = listenerMap.get(event);
+				if (!listeners || listeners.size === 0) continue;
+				for (const listener of listeners) listener(data);
+			}
 		};
 	} else {
 		(TrackPlayer as any)[cbProp] = null;
@@ -102,11 +129,11 @@ export function addEventListener<T extends Event>(event: T, listener: EventCallb
 
 	const fn = listener as (data: any) => void;
 	set.add(fn);
-	syncNitroCallback(cbProp, set);
+	syncNitroCallback(cbProp);
 	return {
 		remove: () => {
 			set.delete(fn);
-			if (cbProp) syncNitroCallback(cbProp, set);
+			if (cbProp) syncNitroCallback(cbProp);
 		}
 	};
 }
@@ -120,7 +147,8 @@ export function addEventListener<T extends Event>(event: T, listener: EventCallb
  * @see https://rntp.dev/docs/api/functions/lifecycle
  */
 export async function setupPlayer(options: PlayerOptions = {}): Promise<void> {
-	return TrackPlayer.setupPlayer(options as unknown as AnyMap);
+	await TrackPlayer.setupPlayer(options as unknown as AnyMap);
+	_isSetup = true;
 }
 
 /**
@@ -147,9 +175,11 @@ export function registerPlaybackService(factory: () => ServiceHandler) {
  */
 export async function add(tracks: AddTrack[] | AddTrack, insertBeforeIndex?: number): Promise<number | undefined>;
 export async function add(tracks: AddTrack | AddTrack[], insertBeforeIndex = -1): Promise<number | undefined> {
+	assertSetup();
 	const addTracks = Array.isArray(tracks) ? tracks : [tracks];
 	if (addTracks.length < 1) return undefined;
-	const result = await TrackPlayer.add(addTracks.map(resolveTrackAssets) as unknown as AnyMap[], insertBeforeIndex);
+	const normalizedTracks = addTracks.map((track) => normalizeNitroValue(resolveTrackAssets(track)) as AnyMap);
+	const result = await TrackPlayer.add(normalizedTracks, insertBeforeIndex);
 	return result ?? undefined;
 }
 
@@ -159,7 +189,8 @@ export async function add(tracks: AddTrack | AddTrack[], insertBeforeIndex = -1)
  * @param track The track to load.
  */
 export async function load(track: AddTrack): Promise<number | undefined> {
-	const result = await TrackPlayer.load(resolveTrackAssets(track) as unknown as AnyMap);
+	assertSetup();
+	const result = await TrackPlayer.load(normalizeNitroValue(resolveTrackAssets(track)) as AnyMap);
 	return result ?? undefined;
 }
 
@@ -171,6 +202,7 @@ export async function load(track: AddTrack): Promise<number | undefined> {
  * the size of the queue, then the track is moved to the end of the queue.
  */
 export async function move(fromIndex: number, toIndex: number): Promise<void> {
+	assertSetup();
 	return TrackPlayer.move(fromIndex, toIndex);
 }
 
@@ -185,6 +217,7 @@ export async function move(fromIndex: number, toIndex: number): Promise<void> {
  */
 export async function remove(indexOrIndexes: number[] | number): Promise<void>;
 export async function remove(indexOrIndexes: number | number[]): Promise<void> {
+	assertSetup();
 	return TrackPlayer.remove(Array.isArray(indexOrIndexes) ? indexOrIndexes : [indexOrIndexes]);
 }
 
@@ -192,6 +225,7 @@ export async function remove(indexOrIndexes: number | number[]): Promise<void> {
  * Clears any upcoming tracks from the queue.
  */
 export async function removeUpcomingTracks(): Promise<void> {
+	assertSetup();
 	return TrackPlayer.removeUpcomingTracks();
 }
 
@@ -202,6 +236,7 @@ export async function removeUpcomingTracks(): Promise<void> {
  * @param initialPosition (Optional) The initial position to seek to in seconds.
  */
 export async function skip(index: number, initialPosition = -1): Promise<void> {
+	assertSetup();
 	return TrackPlayer.skip(index, initialPosition);
 }
 
@@ -211,6 +246,7 @@ export async function skip(index: number, initialPosition = -1): Promise<void> {
  * @param initialPosition (Optional) The initial position to seek to in seconds.
  */
 export async function skipToNext(initialPosition = -1): Promise<void> {
+	assertSetup();
 	return TrackPlayer.skipToNext(initialPosition);
 }
 
@@ -220,6 +256,7 @@ export async function skipToNext(initialPosition = -1): Promise<void> {
  * @param initialPosition (Optional) The initial position to seek to in seconds.
  */
 export async function skipToPrevious(initialPosition = -1): Promise<void> {
+	assertSetup();
 	return TrackPlayer.skipToPrevious(initialPosition);
 }
 
@@ -232,6 +269,7 @@ export async function skipToPrevious(initialPosition = -1): Promise<void> {
  * @see https://rntp.dev/docs/api/functions/player#updateoptionsoptions
  */
 export async function updateOptions(options: UpdateOptions = {}): Promise<void> {
+	assertSetup();
 	return TrackPlayer.updateOptions({ ...options, android: { ...(options.android as Record<string, unknown>) } } as unknown as AnyMap);
 }
 
@@ -243,6 +281,7 @@ export async function updateOptions(options: UpdateOptions = {}): Promise<void> 
  * @param metadata The metadata to update.
  */
 export async function updateMetadataForTrack(trackIndex: number, metadata: TrackMetadataBase): Promise<void> {
+	assertSetup();
 	return TrackPlayer.updateMetadataForTrack(trackIndex, { ...metadata, artwork: resolveImportedAssetOrPath(metadata.artwork) } as unknown as AnyMap);
 }
 
@@ -251,6 +290,7 @@ export async function updateMetadataForTrack(trackIndex: number, metadata: Track
  * without affecting the data stored for the current track.
  */
 export async function updateNowPlayingMetadata(metadata: NowPlayingMetadata): Promise<void> {
+	assertSetup();
 	return TrackPlayer.updateNowPlayingMetadata({ ...metadata, artwork: resolveImportedAssetOrPath(metadata.artwork) } as unknown as AnyMap);
 }
 
@@ -260,6 +300,7 @@ export async function updateNowPlayingMetadata(metadata: NowPlayingMetadata): Pr
  * Resets the player stopping the current track and clearing the queue.
  */
 export async function reset(): Promise<void> {
+	assertSetup();
 	return TrackPlayer.reset();
 }
 
@@ -267,6 +308,7 @@ export async function reset(): Promise<void> {
  * Plays or resumes the current track.
  */
 export async function play(): Promise<void> {
+	assertSetup();
 	return TrackPlayer.play();
 }
 
@@ -274,6 +316,7 @@ export async function play(): Promise<void> {
  * Pauses the current track.
  */
 export async function pause(): Promise<void> {
+	assertSetup();
 	return TrackPlayer.pause();
 }
 
@@ -281,6 +324,7 @@ export async function pause(): Promise<void> {
  * Stops the current track.
  */
 export async function stop(): Promise<void> {
+	assertSetup();
 	return TrackPlayer.stop();
 }
 
@@ -288,6 +332,7 @@ export async function stop(): Promise<void> {
  * Sets whether the player will play automatically when it is ready to do so.
  */
 export async function setPlayWhenReady(playWhenReady: boolean): Promise<boolean> {
+	assertSetup();
 	await TrackPlayer.setPlayWhenReady(playWhenReady);
 	return playWhenReady;
 }
@@ -296,6 +341,7 @@ export async function setPlayWhenReady(playWhenReady: boolean): Promise<boolean>
  * Gets whether the player will play automatically when it is ready to do so.
  */
 export async function getPlayWhenReady(): Promise<boolean> {
+	assertSetup();
 	return TrackPlayer.getPlayWhenReady();
 }
 
@@ -305,6 +351,7 @@ export async function getPlayWhenReady(): Promise<boolean> {
  * @param position The position to seek to in seconds.
  */
 export async function seekTo(position: number): Promise<void> {
+	assertSetup();
 	return TrackPlayer.seekTo(position);
 }
 
@@ -314,6 +361,7 @@ export async function seekTo(position: number): Promise<void> {
  * @param offset The time offset to seek by in seconds.
  */
 export async function seekBy(offset: number): Promise<void> {
+	assertSetup();
 	return TrackPlayer.seekBy(offset);
 }
 
@@ -323,6 +371,7 @@ export async function seekBy(offset: number): Promise<void> {
  * @param volume The volume as a number between 0 and 1.
  */
 export async function setVolume(level: number): Promise<void> {
+	assertSetup();
 	return TrackPlayer.setVolume(level);
 }
 
@@ -333,6 +382,7 @@ export async function setVolume(level: number): Promise<void> {
  * 1 would be regular speed, 2 would be double speed etc.
  */
 export async function setRate(rate: number): Promise<void> {
+	assertSetup();
 	return TrackPlayer.setRate(rate);
 }
 
@@ -342,7 +392,8 @@ export async function setRate(rate: number): Promise<void> {
  * @param tracks The tracks to set as the queue.
  */
 export async function setQueue(tracks: Track[]): Promise<void> {
-	return TrackPlayer.setQueue(tracks as unknown as AnyMap[]);
+	assertSetup();
+	return TrackPlayer.setQueue(tracks.map((track) => normalizeNitroValue(track) as AnyMap));
 }
 
 /**
@@ -351,6 +402,7 @@ export async function setQueue(tracks: Track[]): Promise<void> {
  * @param repeatMode The repeat mode to set.
  */
 export async function setRepeatMode(mode: RepeatMode): Promise<RepeatMode> {
+	assertSetup();
 	await TrackPlayer.setRepeatMode(mode);
 	return mode;
 }
@@ -361,6 +413,7 @@ export async function setRepeatMode(mode: RepeatMode): Promise<RepeatMode> {
  * Gets the volume of the player as a number between 0 and 1.
  */
 export async function getVolume(): Promise<number> {
+	assertSetup();
 	return TrackPlayer.getVolume();
 }
 
@@ -368,6 +421,7 @@ export async function getVolume(): Promise<number> {
  * Gets the playback rate.
  */
 export async function getRate(): Promise<number> {
+	assertSetup();
 	return TrackPlayer.getRate();
 }
 
@@ -377,6 +431,7 @@ export async function getRate(): Promise<number> {
  * @param index The index of the track.
  */
 export async function getTrack(index: number): Promise<Track | undefined> {
+	assertSetup();
 	return (await TrackPlayer.getTrack(index)) as unknown as Track | undefined;
 }
 
@@ -384,6 +439,7 @@ export async function getTrack(index: number): Promise<Track | undefined> {
  * Gets the whole queue.
  */
 export async function getQueue(): Promise<Track[]> {
+	assertSetup();
 	return (await TrackPlayer.getQueue()) as unknown as Track[];
 }
 
@@ -392,6 +448,7 @@ export async function getQueue(): Promise<Track[]> {
  * current track.
  */
 export async function getActiveTrackIndex(): Promise<number | undefined> {
+	assertSetup();
 	return (await TrackPlayer.getActiveTrackIndex()) ?? undefined;
 }
 
@@ -399,6 +456,7 @@ export async function getActiveTrackIndex(): Promise<number | undefined> {
  * Gets the active track or undefined if there is no current track.
  */
 export async function getActiveTrack(): Promise<Track | undefined> {
+	assertSetup();
 	return ((await TrackPlayer.getActiveTrack()) as unknown as Track) ?? undefined;
 }
 
@@ -406,6 +464,7 @@ export async function getActiveTrack(): Promise<Track | undefined> {
  * Gets information on the progress of the currently active track.
  */
 export async function getProgress(): Promise<Progress> {
+	assertSetup();
 	return (await TrackPlayer.getProgress()) as unknown as Progress;
 }
 
@@ -413,6 +472,7 @@ export async function getProgress(): Promise<Progress> {
  * Gets the playback state of the player.
  */
 export async function getPlaybackState(): Promise<PlaybackState> {
+	assertSetup();
 	return (await TrackPlayer.getPlaybackState()) as PlaybackState;
 }
 
@@ -420,6 +480,7 @@ export async function getPlaybackState(): Promise<PlaybackState> {
  * Gets the queue repeat mode.
  */
 export async function getRepeatMode(): Promise<RepeatMode> {
+	assertSetup();
 	return TrackPlayer.getRepeatMode() as Promise<RepeatMode>;
 }
 
@@ -427,6 +488,7 @@ export async function getRepeatMode(): Promise<RepeatMode> {
  * Retries the current item when the playback state is `State.Error`.
  */
 export async function retry() {
+	assertSetup();
 	return TrackPlayer.retry();
 }
 
@@ -435,6 +497,7 @@ export async function retry() {
  * @param bands Array of gain values for each frequency band
  */
 export async function setEqualizer(bands: number[]): Promise<void> {
+	assertSetup();
 	return TrackPlayer.setEqualizer(bands.map((gain) => ({ gain })));
 }
 
@@ -443,6 +506,7 @@ export async function setEqualizer(bands: number[]): Promise<void> {
  * @returns Array of gain values for each frequency band
  */
 export async function getEqualizer(): Promise<number[]> {
+	assertSetup();
 	const bands = await TrackPlayer.getEqualizer();
 	const result = bands.map((b) => (typeof b === "object" && b !== null && "gain" in b ? (b.gain as number) : 0));
 	return result.length > 0 ? result : [0, 0, 0, 0, 0];
@@ -452,6 +516,7 @@ export async function getEqualizer(): Promise<number[]> {
  * Removes the equalizer, resetting audio to normal.
  */
 export async function removeEqualizer(): Promise<void> {
+	assertSetup();
 	return TrackPlayer.removeEqualizer();
 }
 
@@ -488,6 +553,7 @@ export async function validateOnStartCommandIntent(): Promise<boolean> {
  * @param seconds Crossfade duration in seconds
  */
 export async function setCrossFade(seconds: number): Promise<void> {
+	assertSetup();
 	return TrackPlayer.setCrossFade(seconds);
 }
 
@@ -534,6 +600,7 @@ export async function updateSabrPoToken(outputPath: string, poToken: string): Pr
  * Updates the PoToken for the currently playing SABR stream.
  */
 export async function updateSabrPlaybackPoToken(poToken: string): Promise<void> {
+	assertSetup();
 	return TrackPlayer.updateSabrPlaybackPoToken(poToken);
 }
 
@@ -546,6 +613,7 @@ export async function updatePlaybackPoToken(poToken: string): Promise<void> {
  * Equivalent of updatePlaybackPoToken but for a fresh player response / ustreamer config.
  */
 export async function updateSabrPlaybackStream(serverUrl: string, ustreamerConfig: string): Promise<void> {
+	assertSetup();
 	return TrackPlayer.updateSabrPlaybackStream(serverUrl, ustreamerConfig);
 }
 

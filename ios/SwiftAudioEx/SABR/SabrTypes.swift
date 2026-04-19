@@ -43,22 +43,35 @@ struct SabrFormat {
     public init() {}
 
     public init?(dictionary: [String: Any]) {
-        guard let itag = dictionary["itag"] as? Int else { return nil }
+        func toInt(_ value: Any?) -> Int? {
+            if let intValue = value as? Int { return intValue }
+            if let numberValue = value as? NSNumber { return numberValue.intValue }
+            if let stringValue = value as? String { return Int(stringValue) }
+            return nil
+        }
+
+        func toString(_ value: Any?) -> String? {
+            if let stringValue = value as? String { return stringValue }
+            if let numberValue = value as? NSNumber { return numberValue.stringValue }
+            return nil
+        }
+
+        guard let itag = toInt(dictionary["itag"]) else { return nil }
         self.itag = Int32(itag)
-        self.last_modified = dictionary["lastModified"] as? String ?? ""
+        self.last_modified = toString(dictionary["lastModified"]) ?? ""
         self.xtags = dictionary["xtags"] as? String
-        self.width = dictionary["width"] as? Int
-        self.height = dictionary["height"] as? Int
-        self.content_length = (dictionary["contentLength"] as? Int).map { String($0) }
+        self.width = toInt(dictionary["width"])
+        self.height = toInt(dictionary["height"])
+        self.content_length = toString(dictionary["contentLength"]) ?? toInt(dictionary["contentLength"]).map { String($0) }
         self.audio_track_id = dictionary["audioTrackId"] as? String
         self.mime_type = dictionary["mimeType"] as? String
         self.is_drc = dictionary["isDrc"] as? Bool
         self.quality = dictionary["quality"] as? String
         self.quality_label = dictionary["qualityLabel"] as? String
-        self.average_bitrate = dictionary["averageBitrate"] as? Int
-        self.bitrate = dictionary["bitrate"] as? Int ?? 0
+        self.average_bitrate = toInt(dictionary["averageBitrate"])
+        self.bitrate = toInt(dictionary["bitrate"]) ?? 0
         self.audio_quality = dictionary["audioQuality"] as? String
-        self.approx_duration_ms = dictionary["approxDurationMs"] as? Int ?? 0
+        self.approx_duration_ms = toInt(dictionary["approxDurationMs"]) ?? 0
         self.language = dictionary["language"] as? String
         self.is_dubbed = dictionary["isDubbed"] as? Bool
         self.is_auto_dubbed = dictionary["isAutoDubbed"] as? Bool

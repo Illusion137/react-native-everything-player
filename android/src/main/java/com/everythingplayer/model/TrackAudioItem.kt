@@ -22,6 +22,9 @@ data class TrackAudioItem(
     override val mediaId: String? = null,
     val sabrSessionId: String? = null,
     val sabrMimeType: String? = null,
+    val sabrVideoSessionId: String? = null,
+    val sabrVideoMimeType: String? = null,
+    val sabrVideoUrl: String? = null,
     val sabrStartPositionMs: Long? = null
 ) : AudioItem(audioUrl, type, artist, title, albumTitle, artwork, duration, options, mediaId) {
 
@@ -41,6 +44,9 @@ data class TrackAudioItem(
                 putString("cookie", track.cookie)
                 putString("sabrSessionId", sabrSessionId)
                 putString("sabrMimeType", sabrMimeType)
+                putString("sabrVideoSessionId", sabrVideoSessionId)
+                putString("sabrVideoMimeType", sabrVideoMimeType)
+                putString("sabrVideoUrl", sabrVideoUrl)
                 sabrStartPositionMs?.let { putLong("sabrStartPositionMs", it) }
                 if (track.sabrClientName != null || track.sabrClientVersion != null) {
                     putBundle("clientInfo", Bundle().apply {

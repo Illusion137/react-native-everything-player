@@ -41,6 +41,8 @@
 #include "JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_void_____std__string.hpp"
 #include "JFunc_void_std__shared_ptr_AnyMap_.hpp"
 #include "JFunc_void.hpp"
+#include "JHybridNativeVideoViewSpec.hpp"
+#include "views/JHybridNativeVideoViewStateUpdater.hpp"
 #include <NitroModules/DefaultConstructableObject.hpp>
 
 namespace margelo::nitro::everythingplayer {
@@ -57,6 +59,14 @@ struct JHybridNativeEverythingPlayerSpecImpl: public jni::JavaClass<JHybridNativ
     static const auto constructorFn = javaClassStatic()->getConstructor<JHybridNativeEverythingPlayerSpecImpl::javaobject()>();
     jni::local_ref<JHybridNativeEverythingPlayerSpec::JavaPart> javaPart = javaClassStatic()->newObject(constructorFn);
     return javaPart->getJHybridNativeEverythingPlayerSpec();
+  }
+};
+struct JHybridNativeVideoViewSpecImpl: public jni::JavaClass<JHybridNativeVideoViewSpecImpl, JHybridNativeVideoViewSpec::JavaPart> {
+  static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/com/everythingplayer/HybridVideoView;";
+  static std::shared_ptr<JHybridNativeVideoViewSpec> create() {
+    static const auto constructorFn = javaClassStatic()->getConstructor<JHybridNativeVideoViewSpecImpl::javaobject()>();
+    jni::local_ref<JHybridNativeVideoViewSpec::JavaPart> javaPart = javaClassStatic()->newObject(constructorFn);
+    return javaPart->getJHybridNativeVideoViewSpec();
   }
 };
 
@@ -91,12 +101,20 @@ void registerAllNatives() {
   margelo::nitro::everythingplayer::JFunc_std__shared_ptr_Promise_std__shared_ptr_Promise_void_____std__string_cxx::registerNatives();
   margelo::nitro::everythingplayer::JFunc_void_std__shared_ptr_AnyMap__cxx::registerNatives();
   margelo::nitro::everythingplayer::JFunc_void_cxx::registerNatives();
+  margelo::nitro::everythingplayer::JHybridNativeVideoViewSpec::CxxPart::registerNatives();
+  margelo::nitro::everythingplayer::views::JHybridNativeVideoViewStateUpdater::registerNatives();
 
   // Register Nitro Hybrid Objects
   HybridObjectRegistry::registerHybridObjectConstructor(
     "NativeEverythingPlayer",
     []() -> std::shared_ptr<HybridObject> {
       return JHybridNativeEverythingPlayerSpecImpl::create();
+    }
+  );
+  HybridObjectRegistry::registerHybridObjectConstructor(
+    "NativeVideoView",
+    []() -> std::shared_ptr<HybridObject> {
+      return JHybridNativeVideoViewSpecImpl::create();
     }
   );
 }

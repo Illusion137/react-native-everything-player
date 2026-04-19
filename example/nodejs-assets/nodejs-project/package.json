@@ -1,0 +1,12 @@
+{
+	"name": "example-nodejs-project",
+	"version": "0.0.1",
+	"description": "Node worker for PoToken generation in the example app",
+	"main": "main.js",
+	"type": "module",
+	"dependencies": {
+		"bgutils-js": "^3.2.0",
+		"jsdom": "26.1.0",
+		"node-fetch": "^3.3.2"
+	}
+}

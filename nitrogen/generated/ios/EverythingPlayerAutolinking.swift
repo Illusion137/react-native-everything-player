@@ -23,4 +23,16 @@ public final class EverythingPlayerAutolinking {
   public static func isNativeEverythingPlayerRecyclable() -> Bool {
     return HybridEverythingPlayer.self is any RecyclableView.Type
   }
+  
+  public static func createNativeVideoView() -> bridge.std__shared_ptr_HybridNativeVideoViewSpec_ {
+    let hybridObject = HybridVideoView()
+    return { () -> bridge.std__shared_ptr_HybridNativeVideoViewSpec_ in
+      let __cxxWrapped = hybridObject.getCxxWrapper()
+      return __cxxWrapped.getCxxPart()
+    }()
+  }
+  
+  public static func isNativeVideoViewRecyclable() -> Bool {
+    return HybridVideoView.self is any RecyclableView.Type
+  }
 }
