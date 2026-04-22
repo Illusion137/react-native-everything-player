@@ -7,24 +7,24 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0BF9E5B313C42A88994845FB /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 54D593C61B49CAEF126B215D /* PrivacyInfo.xcprivacy */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
-		39BA06CDED6564D4DCA72E40 /* libPods-EverythingPlayerExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 9E0CC98A8DD7E5EE6D751771 /* libPods-EverythingPlayerExample.a */; };
+		237F6B6C6964CA48A18135FD /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 15017E703B8CE6629F468525 /* PrivacyInfo.xcprivacy */; };
+		2D3FAC70B3777990F6BA8207 /* libPods-EverythingPlayerExample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2202B93D093E6161069F8130 /* libPods-EverythingPlayerExample.a */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		55A3862A8705469DCECEE13A /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 004671B723668DE03B6E8BCA /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
+		F5F91483CC4E6C211D76EF2B /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C9BABBFFD9E0E9EB6026235 /* ExpoModulesProvider.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		004671B723668DE03B6E8BCA /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-EverythingPlayerExample/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* EverythingPlayerExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EverythingPlayerExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = EverythingPlayerExample/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = EverythingPlayerExample/Info.plist; sourceTree = "<group>"; };
-		54D593C61B49CAEF126B215D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = EverythingPlayerExample/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		5D226D3EEB958463106584E4 /* Pods-EverythingPlayerExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-EverythingPlayerExample.debug.xcconfig"; path = "Target Support Files/Pods-EverythingPlayerExample/Pods-EverythingPlayerExample.debug.xcconfig"; sourceTree = "<group>"; };
-		95A491CBEA7D0848C3B95DE9 /* Pods-EverythingPlayerExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-EverythingPlayerExample.release.xcconfig"; path = "Target Support Files/Pods-EverythingPlayerExample/Pods-EverythingPlayerExample.release.xcconfig"; sourceTree = "<group>"; };
-		9E0CC98A8DD7E5EE6D751771 /* libPods-EverythingPlayerExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-EverythingPlayerExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		15017E703B8CE6629F468525 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = EverythingPlayerExample/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		2202B93D093E6161069F8130 /* libPods-EverythingPlayerExample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-EverythingPlayerExample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		3C9BABBFFD9E0E9EB6026235 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-EverythingPlayerExample/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		9516CBBF01964A2FCF7FC103 /* Pods-EverythingPlayerExample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-EverythingPlayerExample.debug.xcconfig"; path = "Target Support Files/Pods-EverythingPlayerExample/Pods-EverythingPlayerExample.debug.xcconfig"; sourceTree = "<group>"; };
+		A0F2A4A43A5FBFC4CB64BEA9 /* Pods-EverythingPlayerExample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-EverythingPlayerExample.release.xcconfig"; path = "Target Support Files/Pods-EverythingPlayerExample/Pods-EverythingPlayerExample.release.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = EverythingPlayerExample/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
@@ -37,7 +37,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				39BA06CDED6564D4DCA72E40 /* libPods-EverythingPlayerExample.a in Frameworks */,
+				2D3FAC70B3777990F6BA8207 /* libPods-EverythingPlayerExample.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,7 +53,7 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				54D593C61B49CAEF126B215D /* PrivacyInfo.xcprivacy */,
+				15017E703B8CE6629F468525 /* PrivacyInfo.xcprivacy */,
 			);
 			name = EverythingPlayerExample;
 			sourceTree = "<group>";
@@ -62,27 +62,27 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				9E0CC98A8DD7E5EE6D751771 /* libPods-EverythingPlayerExample.a */,
+				2202B93D093E6161069F8130 /* libPods-EverythingPlayerExample.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		41C3430F6B34BE95E97F89BC /* Pods */ = {
+		3FEC8C4D275FAFE7525DEA4F /* EverythingPlayerExample */ = {
 			isa = PBXGroup;
 			children = (
-				5D226D3EEB958463106584E4 /* Pods-EverythingPlayerExample.debug.xcconfig */,
-				95A491CBEA7D0848C3B95DE9 /* Pods-EverythingPlayerExample.release.xcconfig */,
+				3C9BABBFFD9E0E9EB6026235 /* ExpoModulesProvider.swift */,
+			);
+			name = EverythingPlayerExample;
+			sourceTree = "<group>";
+		};
+		73E2C132CBFE6CC560988887 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				9516CBBF01964A2FCF7FC103 /* Pods-EverythingPlayerExample.debug.xcconfig */,
+				A0F2A4A43A5FBFC4CB64BEA9 /* Pods-EverythingPlayerExample.release.xcconfig */,
 			);
 			name = Pods;
 			path = Pods;
-			sourceTree = "<group>";
-		};
-		77D89D412CADA677FD4B8565 /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				D406A73A9032C633A8464BA6 /* EverythingPlayerExample */,
-			);
-			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -99,8 +99,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				41C3430F6B34BE95E97F89BC /* Pods */,
-				77D89D412CADA677FD4B8565 /* ExpoModulesProviders */,
+				73E2C132CBFE6CC560988887 /* Pods */,
+				E97EA405D3B6F6C8274FED9D /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -124,12 +124,12 @@
 			path = EverythingPlayerExample/Supporting;
 			sourceTree = "<group>";
 		};
-		D406A73A9032C633A8464BA6 /* EverythingPlayerExample */ = {
+		E97EA405D3B6F6C8274FED9D /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				004671B723668DE03B6E8BCA /* ExpoModulesProvider.swift */,
+				3FEC8C4D275FAFE7525DEA4F /* EverythingPlayerExample */,
 			);
-			name = EverythingPlayerExample;
+			name = ExpoModulesProviders;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -140,17 +140,17 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "EverythingPlayerExample" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				02EDCB800C34AC12AFA1EED3 /* [Expo] Configure project */,
+				4B427A5B6E0F978837A6716F /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				6D69327723EF40441775C356 /* [CP] Embed Pods Frameworks */,
-				9CBA286C0B3FF7DF47800C34 /* [CP-User] [NODEJS MOBILE] Copy Node.js Project files */,
-				9F46B72908E202AA8DE6DB04 /* [CP-User] [NODEJS MOBILE] Build Native Modules */,
-				78A1448496018305CAF28510 /* [CP-User] [NODEJS MOBILE] Sign Native Modules */,
-				FC4161BA24767440BD1C1553 /* [CP-User] [NODEJS MOBILE] Remove Simulator Strip */,
+				1E3B6C8EEE59F690191B47F6 /* [CP] Embed Pods Frameworks */,
+				1DCBA5550061614DEC33FA95 /* [CP-User] [NODEJS MOBILE] Copy Node.js Project files */,
+				7360E14FBF8831639376D6E0 /* [CP-User] [NODEJS MOBILE] Build Native Modules */,
+				1A7B1893B05D5545CC657FA1 /* [CP-User] [NODEJS MOBILE] Sign Native Modules */,
+				0844818678E345E672E61099 /* [CP-User] [NODEJS MOBILE] Remove Simulator Strip */,
 			);
 			buildRules = (
 			);
@@ -200,7 +200,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				0BF9E5B313C42A88994845FB /* PrivacyInfo.xcprivacy in Resources */,
+				237F6B6C6964CA48A18135FD /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -224,29 +224,15 @@
 			shellPath = /bin/sh;
 			shellScript = "if [[ -f \"$PODS_ROOT/../.xcode.env\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env\"\nfi\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n# The project root by default is one level up from the ios directory\nexport PROJECT_ROOT=\"$PROJECT_DIR\"/..\n\nif [[ \"$CONFIGURATION\" = *Debug* ]]; then\n  export SKIP_BUNDLING=1\nfi\nif [[ -z \"$ENTRY_FILE\" ]]; then\n  # Set the entry JS file using the bundler's entry resolution.\n  export ENTRY_FILE=\"$(\"$NODE_BINARY\" -e \"require('expo/scripts/resolveAppEntry')\" \"$PROJECT_ROOT\" ios absolute | tail -n 1)\"\nfi\n\nif [[ -z \"$CLI_PATH\" ]]; then\n  # Use Expo CLI\n  export CLI_PATH=\"$(\"$NODE_BINARY\" --print \"require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })\")\"\nfi\nif [[ -z \"$BUNDLE_COMMAND\" ]]; then\n  # Default Expo CLI command for bundling\n  export BUNDLE_COMMAND=\"export:embed\"\nfi\n\n# Source .xcode.env.updates if it exists to allow\n# SKIP_BUNDLING to be unset if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.updates\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.updates\"\nfi\n# Source local changes to allow overrides\n# if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'\"`\n\n";
 		};
-		02EDCB800C34AC12AFA1EED3 /* [Expo] Configure project */ = {
+		0844818678E345E672E61099 /* [CP-User] [NODEJS MOBILE] Remove Simulator Strip */ = {
 			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/.xcode.env",
-				"$(SRCROOT)/.xcode.env.local",
-				"$(SRCROOT)/EverythingPlayerExample/EverythingPlayerExample.entitlements",
-				"$(SRCROOT)/Pods/Target Support Files/Pods-EverythingPlayerExample/expo-configure-project.sh",
-			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(SRCROOT)/Pods/Target Support Files/Pods-EverythingPlayerExample/ExpoModulesProvider.swift",
-			);
+			name = "[CP-User] [NODEJS MOBILE] Remove Simulator Strip";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-EverythingPlayerExample/expo-configure-project.sh\"\n";
+			shellScript = "#!/bin/sh\nset -e\n\nFRAMEWORK_BINARY_PATH=\"$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH/NodeMobile.framework/NodeMobile\"\nFRAMEWORK_STRIPPED_PATH=\"$FRAMEWORK_BINARY_PATH-strip\"\n\nif [ \"$PLATFORM_NAME\" != \"iphonesimulator\" ]; then\n  if $(lipo \"$FRAMEWORK_BINARY_PATH\" -verify_arch \"x86_64\") ; then\n    lipo -output \"$FRAMEWORK_STRIPPED_PATH\" -remove \"x86_64\" \"$FRAMEWORK_BINARY_PATH\"\n    rm \"$FRAMEWORK_BINARY_PATH\"\n    mv \"$FRAMEWORK_STRIPPED_PATH\" \"$FRAMEWORK_BINARY_PATH\"\n    echo \"Removed simulator strip from NodeMobile.framework\"\n  fi\nfi\n";
 		};
 		08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -270,22 +256,38 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		6D69327723EF40441775C356 /* [CP] Embed Pods Frameworks */ = {
+		1A7B1893B05D5545CC657FA1 /* [CP-User] [NODEJS MOBILE] Sign Native Modules */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "[CP-User] [NODEJS MOBILE] Sign Native Modules";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#!/bin/sh\nset -e\n\nif [ -f ./.xcode.env ]; then\n  source \"./.xcode.env\";\nfi\nif [ -f ./.xcode.env.local ]; then\n  source \"./.xcode.env.local\";\nfi\n\nDESIRED_NODE_VERSION=\"18\"\nCURRENT_NODE_VERSION=\"$(node -p \"process.versions.node.split('.')[0]\")\"\nif [ \"$CURRENT_NODE_VERSION\" -ne \"$DESIRED_NODE_VERSION\" ]; then\n  echo \"nodejs-mobile-react-native's ios-build-native-modules script requires \\\nNode.js version $DESIRED_NODE_VERSION, but found \\\n$(node -p 'process.versions.node')\"\n  exit 1\nfi\n\nif [ -z \"$NODEJS_MOBILE_BUILD_NATIVE_MODULES\" ]; then\n# If build native modules preference is not set, look for it in the project's\n#nodejs-assets/BUILD_NATIVE_MODULES.txt file.\nNODEJS_ASSETS_DIR=\"$( cd \"$PROJECT_DIR\" && cd ../nodejs-assets/ && pwd )\"\nPREFERENCE_FILE_PATH=\"$NODEJS_ASSETS_DIR/BUILD_NATIVE_MODULES.txt\"\n  if [ -f \"$PREFERENCE_FILE_PATH\" ]; then\n    NODEJS_MOBILE_BUILD_NATIVE_MODULES=\"$(cat $PREFERENCE_FILE_PATH | xargs)\"\n  fi\nfi\n\nif [ -z \"$NODEJS_MOBILE_BUILD_NATIVE_MODULES\" ]; then\n# If build native modules preference is not set, try to find .gyp files\n#to turn it on.\n  gypfiles=($(find \"$CODESIGNING_FOLDER_PATH/nodejs-project/\" -type f -name \"*.gyp\"))\n  if [ ${#gypfiles[@]} -gt 0 ]; then\n    NODEJS_MOBILE_BUILD_NATIVE_MODULES=1\n  else\n    NODEJS_MOBILE_BUILD_NATIVE_MODULES=0\n  fi\nfi\n\nif [ \"1\" != \"$NODEJS_MOBILE_BUILD_NATIVE_MODULES\" ]; then exit 0; fi\n\n# Delete object files\nfind \"$CODESIGNING_FOLDER_PATH/nodejs-project/\" -name \"*.o\" -type f -delete\nfind \"$CODESIGNING_FOLDER_PATH/nodejs-project/\" -name \"*.a\" -type f -delete\n\n# Create Info.plist for each framework built and loader override.\nPATCH_SCRIPT_DIR=\"$( cd \"$PROJECT_DIR\" && cd ../node_modules/nodejs-mobile-react-native/scripts/ && pwd )\"\nNODEJS_PROJECT_DIR=\"$( cd \"$CODESIGNING_FOLDER_PATH\" && cd nodejs-project/ && pwd )\"\nnode \"$PATCH_SCRIPT_DIR\"/ios-create-plists-and-dlopen-override.js $NODEJS_PROJECT_DIR\n\n# Embed every resulting .framework in the application and delete them afterwards.\nembed_framework()\n{\n  FRAMEWORK_NAME=\"$(basename \"$1\")\"\n  cp -r \"$1\" \"$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH/\"\n  /usr/bin/codesign --force --sign $EXPANDED_CODE_SIGN_IDENTITY --preserve-metadata=identifier,entitlements,flags --timestamp=none \"$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH/$FRAMEWORK_NAME\"\n}\nfind \"$CODESIGNING_FOLDER_PATH/nodejs-project/\" -name \"*.framework\" -type d | while read frmwrk_path; do embed_framework \"$frmwrk_path\"; done\n\n#Delete gyp temporary .deps dependency folders from the project structure.\nfind \"$CODESIGNING_FOLDER_PATH/nodejs-project/\" -path \"*/.deps/*\" -delete\nfind \"$CODESIGNING_FOLDER_PATH/nodejs-project/\" -name \".deps\" -type d -delete\n\n#Delete frameworks from their build paths\nfind \"$CODESIGNING_FOLDER_PATH/nodejs-project/\" -path \"*/*.framework/*\" -delete\nfind \"$CODESIGNING_FOLDER_PATH/nodejs-project/\" -name \"*.framework\" -type d -delete\n";
+		};
+		1DCBA5550061614DEC33FA95 /* [CP-User] [NODEJS MOBILE] Copy Node.js Project files */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "[CP-User] [NODEJS MOBILE] Copy Node.js Project files";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#!/bin/sh\nset -e\n\nNODEJS_ASSETS_DIR=\"$( cd \"$PROJECT_DIR\" && cd ../nodejs-assets/ && pwd )\"\nNODEJS_BUILT_IN_MODULES_DIR=\"$( cd \"$PROJECT_DIR\" && cd ../node_modules/nodejs-mobile-react-native/install/resources/nodejs-modules/ && pwd )\"\n\nif [ -d \"$CODESIGNING_FOLDER_PATH/nodejs-project/\" ]; then\n  rm -rf \"$CODESIGNING_FOLDER_PATH/nodejs-project/\"\nfi\n\nif [ -d \"$CODESIGNING_FOLDER_PATH/builtin_modules/\" ]; then\n  rm -rf \"$CODESIGNING_FOLDER_PATH/builtin_modules/\"\nfi\n\nrsync --archive --delete \"$NODEJS_ASSETS_DIR/nodejs-project\" \"$CODESIGNING_FOLDER_PATH\"\nrsync --archive --delete \"$NODEJS_BUILT_IN_MODULES_DIR/builtin_modules\" \"$CODESIGNING_FOLDER_PATH\"\n";
+		};
+		1E3B6C8EEE59F690191B47F6 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-EverythingPlayerExample/Pods-EverythingPlayerExample-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
 				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermesvm.framework/hermesvm",
 				"${PODS_XCFRAMEWORKS_BUILD_DIR}/nodejs-mobile-react-native/NodeMobile.framework/NodeMobile",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/React.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ReactNativeDependencies.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermesvm.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/NodeMobile.framework",
 			);
@@ -294,15 +296,39 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-EverythingPlayerExample/Pods-EverythingPlayerExample-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		78A1448496018305CAF28510 /* [CP-User] [NODEJS MOBILE] Sign Native Modules */ = {
+		4B427A5B6E0F978837A6716F /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/EverythingPlayerExample/EverythingPlayerExample.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-EverythingPlayerExample/expo-configure-project.sh",
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Pods/Target Support Files/Pods-EverythingPlayerExample/ExpoModulesProvider.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-EverythingPlayerExample/expo-configure-project.sh\"\n";
+		};
+		7360E14FBF8831639376D6E0 /* [CP-User] [NODEJS MOBILE] Build Native Modules */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
-			name = "[CP-User] [NODEJS MOBILE] Sign Native Modules";
+			name = "[CP-User] [NODEJS MOBILE] Build Native Modules";
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "#!/bin/sh\nset -e\nexit 0\n";
+			shellScript = "#!/bin/sh\nset -e\n\nif [ -f ./.xcode.env ]; then\n  source \"./.xcode.env\";\nfi\nif [ -f ./.xcode.env.local ]; then\n  source \"./.xcode.env.local\";\nfi\n\nDESIRED_NODE_VERSION=\"18\"\nCURRENT_NODE_VERSION=\"$(node -p \"process.versions.node.split('.')[0]\")\"\nif [ \"$CURRENT_NODE_VERSION\" -ne \"$DESIRED_NODE_VERSION\" ]; then\n  echo \"nodejs-mobile-react-native requires Node.js version \\\n$DESIRED_NODE_VERSION accessible from Xcode, but found \\\n$(node -p 'process.versions.node')\"\n  exit 1\nfi\n\n# This is our nodejs-project folder that was copied to the Xcode build folder\nNODEPROJ=\"$CODESIGNING_FOLDER_PATH/nodejs-project\"\n\nif [ -z \"$NODEJS_MOBILE_BUILD_NATIVE_MODULES\" ]; then\n# If build native modules preference is not set, look for it in the project's\n#nodejs-assets/BUILD_NATIVE_MODULES.txt file.\nNODEJS_ASSETS_DIR=\"$( cd \"$PROJECT_DIR\" && cd ../nodejs-assets/ && pwd )\"\nPREFERENCE_FILE_PATH=\"$NODEJS_ASSETS_DIR/BUILD_NATIVE_MODULES.txt\"\n  if [ -f \"$PREFERENCE_FILE_PATH\" ]; then\n    NODEJS_MOBILE_BUILD_NATIVE_MODULES=\"$(cat $PREFERENCE_FILE_PATH | xargs)\"\n  fi\nfi\n\nif [ -z \"$NODEJS_MOBILE_BUILD_NATIVE_MODULES\" ]; then\n# If build native modules preference is not set, try to find .gyp files\n#to turn it on.\n  gypfiles=($(find \"$NODEPROJ\" -type f -name \"*.gyp\"))\n  if [ ${#gypfiles[@]} -gt 0 ]; then\n    NODEJS_MOBILE_BUILD_NATIVE_MODULES=1\n  else\n    NODEJS_MOBILE_BUILD_NATIVE_MODULES=0\n  fi\nfi\n\nif [ \"1\" != \"$NODEJS_MOBILE_BUILD_NATIVE_MODULES\" ]; then exit 0; fi\n\n# Delete object files that may already come from within the npm package.\nfind \"$NODEPROJ\" -name \"*.o\" -type f -delete\nfind \"$NODEPROJ\" -name \"*.a\" -type f -delete\n\n# Function to skip compilation of a prebuilt module\npreparePrebuiltModule()\n{\n  local DOT_NODE_PATH=\"$1\"\n  local DOT_NODE_FULL=\"$(cd \"$(dirname -- \"$DOT_NODE_PATH\")\" >/dev/null; pwd -P)/$(basename -- \"$DOT_NODE_PATH\")\"\n  local MODULE_ROOT=\"$(cd $DOT_NODE_PATH && cd .. && cd .. && cd .. && pwd)\"\n  local MODULE_NAME=\"$(basename $MODULE_ROOT)\"\n  echo \"Preparing to use the prebuild in $MODULE_NAME\"\n  # Move the prebuild to the correct folder:\n  rm -rf $MODULE_ROOT/build\n  mkdir -p $MODULE_ROOT/build/Release\n  mv $DOT_NODE_FULL $MODULE_ROOT/build/Release/\n  # Hack the npm package to forcefully disable compile-on-install:\n  rm -rf $MODULE_ROOT/binding.gyp\n  sed -i.bak 's/\"install\"/\"dontinstall\"/g; s/\"rebuild\"/\"dontrebuild\"/g; s/\"gypfile\"/\"dontgypfile\"/g' $MODULE_ROOT/package.json\n}\n\n# Delete bundle contents that may be there from previous builds.\n# Handle the special case where the module has a prebuild that we want to use\nif [ \"$PLATFORM_PREFERRED_ARCH\" == \"arm64\" ]; then\n  PREBUILD_ARCH=\"arm64\"\nelse\n  PREBUILD_ARCH=\"x64\"\nfi\nif [ \"$PLATFORM_NAME\" == \"iphonesimulator\" ] && [ \"$NATIVE_ARCH\" == \"arm64\" ]; then\n  SUFFIX=\"-simulator\"\n  PREBUILD_ARCH=\"arm64\"\nelse\n  SUFFIX=\"\"\nfi\nfind -E \"$NODEPROJ\" \\\n    ! -regex \".*/prebuilds/ios-$PREBUILD_ARCH$SUFFIX\" \\\n    -regex '.*/prebuilds/[^/]*$' -type d \\\n    -prune -exec rm -rf \"{}\" \\;\nfind -E \"$NODEPROJ\" \\\n    ! -regex \".*/prebuilds/ios-$PREBUILD_ARCH$SUFFIX/.*\\.node$\" \\\n    -name '*.node' -type f \\\n    -exec rm \"{}\" \\;\nfind \"$NODEPROJ\" \\\n    -name \"*.framework\" -type d \\\n    -prune -exec rm -rf \"{}\" \\;\nfor DOT_NODE in `find -E \"$NODEPROJ\" -regex \".*/prebuilds/ios-$PREBUILD_ARCH$SUFFIX/.*\\.node$\"`; do\n  preparePrebuiltModule \"$DOT_NODE\"\ndone\n\n# Apply patches to the modules package.json\nif [ -d \"$NODEPROJ\"/node_modules/ ]; then\n  PATCH_SCRIPT_DIR=\"$( cd \"$PROJECT_DIR\" && cd ../node_modules/nodejs-mobile-react-native/scripts/ && pwd )\"\n  NODEJS_PROJECT_MODULES_DIR=\"$( cd \"$NODEPROJ\" && cd node_modules && pwd )\"\n  node \"$PATCH_SCRIPT_DIR\"/patch-package.js $NODEJS_PROJECT_MODULES_DIR\nfi\n\n# Get the nodejs-mobile-gyp location\nNODEJS_MOBILE_GYP_BIN_FILE=\"$( cd \"$PROJECT_DIR\" && cd .. && node -p 'require.resolve(`nodejs-mobile-gyp/bin/node-gyp.js`)' )\"\n\n# Support building neon-bindings (Rust) native modules\nif [ -f ~/.cargo/env ]; then\n  source ~/.cargo/env;\nfi\n\n# Rebuild modules with right environment\nNODEJS_HEADERS_DIR=\"$( cd \"$PROJECT_DIR\" && cd ../node_modules/nodejs-mobile-react-native/ios/libnode/ && pwd )\"\npushd $NODEPROJ\nif [ \"$PLATFORM_NAME\" == \"iphoneos\" ]; then\n  GYP_DEFINES=\"OS=ios\" \\\n  CARGO_BUILD_TARGET=\"aarch64-apple-ios iossim=false\" \\\n  NODEJS_MOBILE_GYP=\"$NODEJS_MOBILE_GYP_BIN_FILE\" \\\n  npm_config_node_gyp=\"$NODEJS_MOBILE_GYP_BIN_FILE\" \\\n  npm_config_nodedir=\"$NODEJS_HEADERS_DIR\" \\\n  npm_config_platform=\"ios\" \\\n  npm_config_format=\"make-ios\" \\\n  npm_config_arch=\"arm64\" \\\n  npm --verbose --foreground-scripts rebuild --build-from-source\nelif [ \"$NATIVE_ARCH\" == \"arm64\" ]; then\n  GYP_DEFINES=\"OS=ios target_arch=arm64 iossim=true\" \\\n  CARGO_BUILD_TARGET=\"aarch64-apple-ios-sim\" \\\n  NODEJS_MOBILE_GYP=\"$NODEJS_MOBILE_GYP_BIN_FILE\" \\\n  npm_config_node_gyp=\"$NODEJS_MOBILE_GYP_BIN_FILE\" \\\n  npm_config_nodedir=\"$NODEJS_HEADERS_DIR\" \\\n  npm_config_platform=\"ios\" \\\n  npm_config_format=\"make-ios\" \\\n  npm_config_arch=\"arm64\" \\\n  npm --verbose --foreground-scripts rebuild --build-from-source\nelse\n  GYP_DEFINES=\"OS=ios target_arch=x64 iossim=true\" \\\n  CARGO_BUILD_TARGET=\"x86_64-apple-ios\" \\\n  NODEJS_MOBILE_GYP=\"$NODEJS_MOBILE_GYP_BIN_FILE\" \\\n  npm_config_node_gyp=\"$NODEJS_MOBILE_GYP_BIN_FILE\" \\\n  npm_config_nodedir=\"$NODEJS_HEADERS_DIR\" \\\n  npm_config_platform=\"ios\" \\\n  npm_config_format=\"make-ios\" \\\n  npm_config_arch=\"x64\" \\\n  npm --verbose --foreground-scripts rebuild --build-from-source\nfi\npopd\n";
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -314,53 +340,27 @@
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/ExpoFileSystem/ExpoFileSystem_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/RCT-Folly/RCT-Folly_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/React-Core_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/React-cxxreact/React-cxxreact_privacy.bundle",
-				"${PODS_CONFIGURATION_BUILD_DIR}/SwiftProtobuf/SwiftProtobuf.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/boost/boost_privacy.bundle",
+				"${PODS_CONFIGURATION_BUILD_DIR}/glog/glog_privacy.bundle",
 			);
 			name = "[CP] Copy Pods Resources";
 			outputPaths = (
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/EXConstants.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoConstants_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ExpoFileSystem_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/RCT-Folly_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-Core_privacy.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/React-cxxreact_privacy.bundle",
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/SwiftProtobuf.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/boost_privacy.bundle",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/glog_privacy.bundle",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-EverythingPlayerExample/Pods-EverythingPlayerExample-resources.sh\"\n";
 			showEnvVarsInLog = 0;
-		};
-		9CBA286C0B3FF7DF47800C34 /* [CP-User] [NODEJS MOBILE] Copy Node.js Project files */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			name = "[CP-User] [NODEJS MOBILE] Copy Node.js Project files";
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "#!/bin/sh\nset -e\n\nNODEJS_ASSETS_DIR=\"$( cd \"$PROJECT_DIR\" && cd ../nodejs-assets/ && pwd )\"\nNODEJS_BUILT_IN_MODULES_DIR=\"$( cd \"$PROJECT_DIR\" && cd ../node_modules/nodejs-mobile-react-native/install/resources/nodejs-modules/ && pwd )\"\n\nif [ -d \"$CODESIGNING_FOLDER_PATH/nodejs-project/\" ]; then\n  rm -rf \"$CODESIGNING_FOLDER_PATH/nodejs-project/\"\nfi\n\nif [ -d \"$CODESIGNING_FOLDER_PATH/builtin_modules/\" ]; then\n  rm -rf \"$CODESIGNING_FOLDER_PATH/builtin_modules/\"\nfi\n\nrsync --archive --delete \"$NODEJS_ASSETS_DIR/nodejs-project\" \"$CODESIGNING_FOLDER_PATH\"\nrsync --archive --delete \"$NODEJS_BUILT_IN_MODULES_DIR/builtin_modules\" \"$CODESIGNING_FOLDER_PATH\"\n";
-		};
-		9F46B72908E202AA8DE6DB04 /* [CP-User] [NODEJS MOBILE] Build Native Modules */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			name = "[CP-User] [NODEJS MOBILE] Build Native Modules";
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "#!/bin/sh\nset -e\nexit 0\n";
-		};
-		FC4161BA24767440BD1C1553 /* [CP-User] [NODEJS MOBILE] Remove Simulator Strip */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			name = "[CP-User] [NODEJS MOBILE] Remove Simulator Strip";
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "#!/bin/sh\nset -e\n\nFRAMEWORK_BINARY_PATH=\"$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH/NodeMobile.framework/NodeMobile\"\nFRAMEWORK_STRIPPED_PATH=\"$FRAMEWORK_BINARY_PATH-strip\"\n\nif [ \"$PLATFORM_NAME\" != \"iphonesimulator\" ]; then\n  if $(lipo \"$FRAMEWORK_BINARY_PATH\" -verify_arch \"x86_64\") ; then\n    lipo -output \"$FRAMEWORK_STRIPPED_PATH\" -remove \"x86_64\" \"$FRAMEWORK_BINARY_PATH\"\n    rm \"$FRAMEWORK_BINARY_PATH\"\n    mv \"$FRAMEWORK_STRIPPED_PATH\" \"$FRAMEWORK_BINARY_PATH\"\n    echo \"Removed simulator strip from NodeMobile.framework\"\n  fi\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -370,7 +370,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				55A3862A8705469DCECEE13A /* ExpoModulesProvider.swift in Sources */,
+				F5F91483CC4E6C211D76EF2B /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -379,7 +379,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 5D226D3EEB958463106584E4 /* Pods-EverythingPlayerExample.debug.xcconfig */;
+			baseConfigurationReference = 9516CBBF01964A2FCF7FC103 /* Pods-EverythingPlayerExample.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -396,13 +396,14 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 13.4;
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
-				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG -enable-upcoming-feature InternalImportsByDefault";
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.everythingplayer.example;
 				PRODUCT_NAME = EverythingPlayerExample;
 				SWIFT_OBJC_BRIDGING_HEADER = "EverythingPlayerExample/EverythingPlayerExample-Bridging-Header.h";
@@ -415,7 +416,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 95A491CBEA7D0848C3B95DE9 /* Pods-EverythingPlayerExample.release.xcconfig */;
+			baseConfigurationReference = A0F2A4A43A5FBFC4CB64BEA9 /* Pods-EverythingPlayerExample.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -427,13 +428,14 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 13.4;
 				MARKETING_VERSION = 1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
 					"-lc++",
 				);
-				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE -enable-upcoming-feature InternalImportsByDefault";
+				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = com.everythingplayer.example;
 				PRODUCT_NAME = EverythingPlayerExample;
 				SWIFT_OBJC_BRIDGING_HEADER = "EverythingPlayerExample/EverythingPlayerExample-Bridging-Header.h";
@@ -509,7 +511,6 @@
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
-				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 				USE_HERMES = true;
 			};
 			name = Debug;
@@ -571,7 +572,6 @@
 				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
-				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
 				USE_HERMES = true;
 				VALIDATE_PRODUCT = YES;
 			};

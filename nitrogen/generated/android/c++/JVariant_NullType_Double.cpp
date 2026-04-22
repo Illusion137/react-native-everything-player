@@ -7,7 +7,7 @@
 
 #include "JVariant_NullType_Double.hpp"
 
-namespace margelo::nitro::everythingplayer {
+namespace margelo::nitro::nitroplayer {
   /**
    * Converts JVariant_NullType_Double to std::variant<nitro::NullType, double>
    */
@@ -23,4 +23,4 @@ namespace margelo::nitro::everythingplayer {
     }
     throw std::invalid_argument("Variant is unknown Kotlin instance!");
   }
-} // namespace margelo::nitro::everythingplayer
+} // namespace margelo::nitro::nitroplayer

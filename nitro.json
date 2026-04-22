@@ -1,20 +1,72 @@
 {
-  "cxxNamespace": ["everythingplayer"],
+  "$schema": "https://nitro.margelo.com/nitro.schema.json",
+  "cxxNamespace": ["nitroplayer"],
   "ios": {
-    "iosModuleName": "EverythingPlayer"
+    "iosModuleName": "NitroPlayer"
   },
   "android": {
-    "androidNamespace": ["com", "everythingplayer"],
-    "androidCxxLibName": "EverythingPlayer"
+    "androidNamespace": ["nitroplayer"],
+    "androidCxxLibName": "NitroPlayer"
   },
   "autolinking": {
-    "NativeEverythingPlayer": {
-      "ios": { "language": "swift", "implementationClassName": "HybridEverythingPlayer" },
-      "android": { "language": "kotlin", "implementationClassName": "HybridEverythingPlayer" }
+    "PlayerQueue": {
+      "ios": {
+        "language": "swift",
+        "implementationClassName": "HybridPlayerQueue"
+      },
+      "android": {
+        "language": "kotlin",
+        "implementationClassName": "HybridPlayerQueue"
+      }
     },
-    "NativeVideoView": {
-      "ios": { "language": "swift", "implementationClassName": "HybridVideoView" },
-      "android": { "language": "kotlin", "implementationClassName": "HybridVideoView" }
+    "TrackPlayer": {
+      "ios": {
+        "language": "swift",
+        "implementationClassName": "HybridTrackPlayer"
+      },
+      "android": {
+        "language": "kotlin",
+        "implementationClassName": "HybridTrackPlayer"
+      }
+    },
+    "AndroidAutoMediaLibrary": {
+      "android": {
+        "language": "kotlin",
+        "implementationClassName": "HybridAndroidAutoMediaLibrary"
+      }
+    },
+    "AudioDevices": {
+      "android": {
+        "language": "kotlin",
+        "implementationClassName": "HybridAudioDevices"
+      }
+    },
+    "AudioRoutePicker": {
+      "ios": {
+        "language": "swift",
+        "implementationClassName": "HybridAudioRoutePicker"
+      }
+    },
+    "DownloadManager": {
+      "ios": {
+        "language": "swift",
+        "implementationClassName": "HybridDownloadManager"
+      },
+      "android": {
+        "language": "kotlin",
+        "implementationClassName": "HybridDownloadManager"
+      }
+    },
+    "Equalizer": {
+      "ios": {
+        "language": "swift",
+        "implementationClassName": "HybridEqualizer"
+      },
+      "android": {
+        "language": "kotlin",
+        "implementationClassName": "HybridEqualizer"
+      }
     }
-  }
+  },
+  "ignorePaths": ["**/node_modules"]
 }

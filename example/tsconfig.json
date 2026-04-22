@@ -1,31 +1,29 @@
 {
-	"compilerOptions": {
-		"strict": true,
-		"target": "ESNext",
-		"module": "ESNext",
-		"moduleResolution": "bundler",
-		"jsx": "react-jsx",
-		"skipLibCheck": true,
-		"types": ["react", "react-native"],
-		"lib": ["ESNext"],
-		"baseUrl": "./",
-		"paths": {
-			// ...other paths
-			"@native/*": ["lib-origin/roze/native/*"],
-			"@lib/*": ["lib-origin/roze/lib/*"],
-			"@roze/*": ["lib-origin/roze/src/*", "roze/*"],
-			"@origin/*": ["lib-origin/origin/src/*"],
-			"@lutz/*": ["lib-origin/lutz/src/*"],
-			"@sosu/*": ["lib-origin/sosu/src/*"],
-			"@illusive/*": ["lib-origin/Illusive/src/*"],
-			"@illusicord/*": ["lib-origin/illusicord/src/*"],
-			"@common/*": ["lib-origin/common/*"],
-			"@admin/*": ["lib-origin/admin/*"],
-			"@sample/*": ["lib-origin/sample/*"],
-			"react-native-everything-player": ["../src/index"]
-		}
-	},
-	"include": ["**/*.ts", "**/*.tsx"],
-	"exclude": ["lib-origin/**", "node_modules/**"],
-	"extends": "expo/tsconfig.base"
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "noEmitOnError": true,
+    "noEmit": true,
+    "noImplicitAny": true,
+    "skipLibCheck": true,
+    "noUnusedParameters": true,
+    "noUnusedLocals": true,
+    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "allowImportingTsExtensions": true,
+    "allowJs": true,
+    "types": [],
+    "baseUrl": "./",
+    "paths": {
+      "@native/*": ["./lib-origin/roze/native/*"],
+      "@lib/*": ["./lib-origin/roze/lib/*"],
+      "@origin/*": ["./lib-origin/origin/src/*"],
+      "@illusive/*": ["./lib-origin/Illusive/src/*"],
+      "@common/*": ["./lib-origin/common/*"]
+      //   "react-native-everything-player": ["../lib/index"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"]
 }

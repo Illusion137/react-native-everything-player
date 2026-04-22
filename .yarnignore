@@ -1,7 +1,0 @@
-example
-node_modules
-android/.cxx
-android/build
-android/.gradle
-ios/.claude
-dist

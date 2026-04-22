@@ -1,7 +1,0 @@
-dist
-node_modules
-nitrogen/generated
-android/generated
-android/build
-android/.cxx
-.gradle

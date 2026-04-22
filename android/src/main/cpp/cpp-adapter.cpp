@@ -1,10 +1,11 @@
+#include "NitroPlayerOnLoad.hpp"
+
 #include <jni.h>
 #include <fbjni/fbjni.h>
 
-#include "EverythingPlayerOnLoad.hpp"
-
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void*) {
-  return facebook::jni::initialize(vm, [] {
-    margelo::nitro::everythingplayer::registerAllNatives();
+  return facebook::jni::initialize(vm, []() {
+    margelo::nitro::nitroplayer::registerAllNatives();
   });
 }
+

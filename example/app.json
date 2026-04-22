@@ -1,12 +1,18 @@
 {
-	"expo": {
-		"name": "EverythingPlayerExample",
-		"slug": "everything-player-example",
-		"scheme": "everything-player-example",
-		"jsEngine": "hermes",
-		"plugins": [["expo-build-properties", { "buildReactNativeFromSource": true, "useHermesV1": true }]],
-		"autolinking": { "ios": { "exclude": ["lib-origin", "react-native-fast-base64"] }, "android": { "exclude": ["lib-origin", "react-native-fast-base64"] } },
-		"ios": { "supportsTablet": true, "bundleIdentifier": "com.everythingplayer.example" },
-		"android": { "package": "com.everythingplayer.example" }
-	}
+  "expo": {
+    "name": "EverythingPlayerExample",
+    "slug": "everything-player-example",
+    "scheme": "everything-player-example",
+    "plugins": [
+      [
+        "expo-build-properties",
+        { "buildReactNativeFromSource": true, "useHermesV1": true }
+      ]
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.everythingplayer.example"
+    },
+    "android": { "package": "com.everythingplayer.example" }
+  }
 }

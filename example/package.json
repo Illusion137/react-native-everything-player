@@ -10,6 +10,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
+		"babel-preset-expo": "56.0.0-canary-20260305-5163746",
 		"base-64": "^1.0.0",
 		"bgutils-js": "^3.2.0",
 		"crypto-js": "^4.2.0",
@@ -19,8 +20,9 @@
 		"googlevideo": "^4.0.4",
 		"nodejs-mobile-react-native": "^18.20.4",
 		"path": "^0.12.7",
+		"path-browserify": "^1.0.1",
 		"react": "19.2.3",
-		"react-native": "0.85.1",
+		"react-native": "^0.84.1",
 		"react-native-everything-player": "file:..",
 		"react-native-nitro-modules": "^0.35.0",
 		"react-native-url-polyfill": "^3.0.0",
@@ -31,6 +33,7 @@
 	},
 	"devDependencies": {
 		"@types/react": "~19.1.10",
+		"babel-plugin-module-resolver": "^5.0.3",
 		"typescript": "~5.9.2"
 	},
 	"overrides": {

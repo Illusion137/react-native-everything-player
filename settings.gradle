@@ -1,7 +1,0 @@
-rootProject.name = "react-native-everything-player"
-
-include(":android")
-project(":android").projectDir = file("android")
-
-include(":react-native-nitro-modules")
-project(":react-native-nitro-modules").projectDir = file("node_modules/react-native-nitro-modules/android")

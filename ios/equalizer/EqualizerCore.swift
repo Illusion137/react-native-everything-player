@@ -1,0 +1,671 @@
+//
+//  EqualizerCore.swift
+//  NitroPlayer
+//
+//  Created by Ritesh Shukla on 04/02/26.
+//
+
+import AVFoundation
+import Accelerate
+import Foundation
+import MediaToolbox
+import NitroModules
+
+class EqualizerCore {
+  // MARK: - Singleton
+
+  static let shared = EqualizerCore()
+
+  // MARK: - Properties
+
+  // Internal so TapContext can access it
+  private(set) var isEqualizerEnabled: Bool = false
+  private var currentPresetName: String?
+
+  // Standard 10-band frequencies: 31Hz, 63Hz, 125Hz, 250Hz, 500Hz, 1kHz, 2kHz, 4kHz, 8kHz, 16kHz
+  let frequencies: [Float] = [31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000]
+  private let frequencyLabels = ["31 Hz", "63 Hz", "125 Hz", "250 Hz", "500 Hz", "1 kHz", "2 kHz", "4 kHz", "8 kHz", "16 kHz"]
+
+  // Current gains storage - internal so TapContext can access
+  private(set) var currentGains: [Double] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  private var cachedBands: [EqualizerBand]?
+  private var cachedCustomPresets: [EqualizerPreset]?
+
+  // Dirty flag: set when gains change so TapContext only recalculates when needed
+  var gainsDirty: Bool = true
+
+  // UserDefaults keys
+  private let enabledKey = "eq_enabled"
+  private let bandGainsKey = "eq_band_gains"
+  private let currentPresetKey = "eq_current_preset"
+  private let customPresetsKey = "eq_custom_presets"
+
+  // Event listeners (v2 — ListenerRegistry with stable IDs)
+  private let onEnabledChangeListeners = ListenerRegistry<(Bool) -> Void>()
+  private let onBandChangeListeners = ListenerRegistry<([EqualizerBand]) -> Void>()
+  private let onPresetChangeListeners = ListenerRegistry<(Variant_NullType_String?) -> Void>()
+
+  // MARK: - Built-in Presets
+
+  private static let builtInPresets: [String: [Double]] = [
+    "Flat":               [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    "Rock":               [4.8, 2.88, -3.36, -4.8, -1.92, 2.4, 5.28, 6.72, 6.72, 6.72],
+    "Pop":                [0.96, 2.88, 4.32, 4.8, 3.36, 0.0, -1.44, -1.44, 0.96, 0.96],
+    "Classical":          [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -4.32, -4.32, -4.32, -5.76],
+    "Dance":              [5.76, 4.32, 1.44, 0.0, 0.0, -3.36, -4.32, -4.32, 0.0, 0.0],
+    "Techno":             [4.8, 3.36, 0.0, -3.36, -2.88, 0.0, 4.8, 5.76, 5.76, 5.28],
+    "Club":               [0.0, 0.0, 4.8, 3.36, 3.36, 3.36, 1.92, 0.0, 0.0, 0.0],
+    "Live":               [-2.88, 0.0, 2.4, 3.36, 3.36, 3.36, 2.4, 1.44, 1.44, 1.44],
+    "Reggae":             [0.0, 0.0, 0.0, -3.36, 0.0, 3.84, 3.84, 0.0, 0.0, 0.0],
+    "Full Bass":          [4.8, 5.76, 5.76, 3.36, 0.96, -2.4, -4.8, -6.24, -6.72, -6.72],
+    "Full Treble":        [-5.76, -5.76, -5.76, -2.4, 1.44, 6.72, 9.6, 9.6, 9.6, 10.08],
+    "Full Bass & Treble": [4.32, 3.36, 0.0, -4.32, -2.88, 0.96, 4.8, 6.72, 7.2, 7.2],
+    "Large Hall":         [6.24, 6.24, 3.36, 3.36, 0.0, -2.88, -2.88, -2.88, 0.0, 0.0],
+    "Party":              [4.32, 4.32, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4.32, 4.32],
+    "Ska":                [-1.44, -2.88, -2.4, 0.0, 2.4, 3.36, 5.28, 5.76, 6.72, 5.76],
+    "Soft":               [2.88, 0.96, 0.0, -1.44, 0.0, 2.4, 4.8, 5.76, 6.72, 7.2],
+    "Soft Rock":          [2.4, 2.4, 1.44, 0.0, -2.4, -3.36, -1.92, 0.0, 1.44, 5.28],
+    "Headphones":         [2.88, 6.72, 3.36, -1.92, -1.44, 0.96, 2.88, 5.76, 7.68, 8.64],
+    "Laptop Speakers":    [2.88, 6.72, 3.36, -1.92, -1.44, 0.96, 2.88, 5.76, 7.68, 8.64],
+  ]
+
+  // MARK: - Initialization
+
+  private init() {
+    restoreSettings()
+    NitroPlayerLogger.log("EqualizerCore", "✅ Initialized with MTAudioProcessingTap support")
+  }
+
+  // MARK: - Audio Mix Creation for AVPlayerItem
+
+  /// Applies an AVAudioMix with equalizer processing for the given AVPlayerItem.
+  /// No-ops when the equalizer is disabled so that AVPlayerItems remain tap-free,
+  /// keeping the audio pipeline configuration identical across all queued items
+  /// and allowing AVQueuePlayer to perform seamless gapless transitions.
+  ///
+  /// When the asset's "tracks" key is already loaded (e.g. from preloading),
+  /// the mix is applied **synchronously** so the item enters AVQueuePlayer with
+  /// the correct tap from the start — avoiding a pipeline reconfiguration that
+  /// causes an audible gap at the transition.
+  func applyAudioMix(to playerItem: AVPlayerItem) {
+    guard isEqualizerEnabled else {
+      // Ensure no stale tap remains from a previous enable/disable cycle
+      if playerItem.audioMix != nil {
+        playerItem.audioMix = nil
+      }
+      return
+    }
+
+    let asset = playerItem.asset
+
+    // Fast path: "tracks" already loaded (from preloadUpcomingTracks) — apply synchronously.
+    var keyError: NSError?
+    if asset.statusOfValue(forKey: "tracks", error: &keyError) == .loaded {
+      buildAndApplyAudioMix(to: playerItem, asset: asset)
+      NitroPlayerLogger.log("EqualizerCore", "✅ Applied audio mix with EQ tap to player item (sync — preloaded)")
+      return
+    }
+
+    // Slow path: load "tracks" key asynchronously to avoid blocking
+    asset.loadValuesAsynchronously(forKeys: ["tracks"]) { [weak self] in
+      guard let self = self else { return }
+
+      var error: NSError?
+      let status = asset.statusOfValue(forKey: "tracks", error: &error)
+
+      if status == .failed {
+          NitroPlayerLogger.log("EqualizerCore", "⚠️ Failed to load tracks key: \(error?.localizedDescription ?? "unknown")")
+        return
+      }
+
+      // Proceed only if loaded successfully
+      guard status == .loaded else {
+        NitroPlayerLogger.log("EqualizerCore", "⚠️ Tracks not loaded, status: \(status.rawValue)")
+        return
+      }
+
+      // Apply directly — audioMix is thread-safe and applying on the
+      // loadValues completion queue avoids a main-thread hop that would
+      // delay tap attachment and risk a pipeline mismatch at pre-roll time.
+      self.buildAndApplyAudioMix(to: playerItem, asset: asset)
+      NitroPlayerLogger.log("EqualizerCore", "✅ Applied audio mix with EQ tap to player item (async)")
+    }
+  }
+
+  /// Creates an MTAudioProcessingTap-backed AVAudioMix and sets it on the player item.
+  /// Must be called when the asset's "tracks" key is already loaded.
+  private func buildAndApplyAudioMix(to playerItem: AVPlayerItem, asset: AVAsset) {
+    guard let audioTrack = asset.tracks(withMediaType: .audio).first else {
+      NitroPlayerLogger.log("EqualizerCore", "⚠️ No audio track found in asset")
+      return
+    }
+
+    // Create audio mix input parameters
+    let inputParams = AVMutableAudioMixInputParameters(track: audioTrack)
+
+    // Create the audio processing tap
+    var callbacks = MTAudioProcessingTapCallbacks(
+      version: kMTAudioProcessingTapCallbacksVersion_0,
+      clientInfo: UnsafeMutableRawPointer(Unmanaged.passRetained(self).toOpaque()),
+      init: tapInitCallback,
+      finalize: tapFinalizeCallback,
+      prepare: tapPrepareCallback,
+      unprepare: tapUnprepareCallback,
+      process: tapProcessCallback
+    )
+
+    var tap: MTAudioProcessingTap?
+    let createStatus = MTAudioProcessingTapCreate(
+      kCFAllocatorDefault,
+      &callbacks,
+      kMTAudioProcessingTapCreationFlag_PreEffects,
+      &tap
+    )
+
+    guard createStatus == noErr, let audioTap = tap else {
+      NitroPlayerLogger.log("EqualizerCore", "❌ Failed to create audio processing tap, status: \(createStatus)")
+      return
+    }
+
+    inputParams.audioTapProcessor = audioTap
+
+    // Create and apply audio mix
+    let audioMix = AVMutableAudioMix()
+    audioMix.inputParameters = [inputParams]
+    playerItem.audioMix = audioMix
+  }
+
+  // MARK: - Public Methods
+
+  func setEnabled(_ enabled: Bool) -> Bool {
+    isEqualizerEnabled = enabled
+
+    notifyEnabledChange(enabled)
+    saveEnabled(enabled)
+
+    NitroPlayerLogger.log("EqualizerCore", "🎚️ Equalizer \(enabled ? "enabled" : "disabled")")
+    return true
+  }
+
+  func isEnabled() -> Bool {
+    return isEqualizerEnabled
+  }
+
+  func getBands() -> [EqualizerBand] {
+    if let cached = cachedBands { return cached }
+    let bands = (0..<10).map { i in
+      EqualizerBand(
+        index: Double(i),
+        centerFrequency: Double(frequencies[i]),
+        gainDb: currentGains[i],
+        frequencyLabel: frequencyLabels[i]
+      )
+    }
+    cachedBands = bands
+    return bands
+  }
+
+  func setBandGain(bandIndex: Int, gainDb: Double) -> Bool {
+    guard bandIndex >= 0 && bandIndex < 10 else { return false }
+
+    let clampedGain = max(-12.0, min(12.0, gainDb))
+    currentGains[bandIndex] = clampedGain
+    cachedBands = nil
+    gainsDirty = true
+
+    currentPresetName = nil
+    notifyBandChange(getBands())
+    notifyPresetChange(nil)
+    saveBandGains(currentGains)
+    saveCurrentPreset(nil)
+
+    NitroPlayerLogger.log("EqualizerCore", "🎚️ Band \(bandIndex) gain set to \(clampedGain) dB")
+    return true
+  }
+
+  func setAllBandGains(_ gains: [Double]) -> Bool {
+    guard gains.count == 10 else { return false }
+
+    for i in 0..<10 {
+      currentGains[i] = max(-12.0, min(12.0, gains[i]))
+    }
+    cachedBands = nil
+    gainsDirty = true
+
+    notifyBandChange(getBands())
+    saveBandGains(currentGains)
+
+    NitroPlayerLogger.log("EqualizerCore", "🎚️ All band gains updated")
+    return true
+  }
+
+  func getBandRange() -> GainRange {
+    return GainRange(min: -12.0, max: 12.0)
+  }
+
+  func getPresets() -> [EqualizerPreset] {
+    return getBuiltInPresets() + getCustomPresets()
+  }
+
+  func getBuiltInPresets() -> [EqualizerPreset] {
+    return Self.builtInPresets.map { name, gains in
+      EqualizerPreset(name: name, gains: gains, type: .builtIn)
+    }
+  }
+
+  func getCustomPresets() -> [EqualizerPreset] {
+    if let cached = cachedCustomPresets { return cached }
+    guard let data = UserDefaults.standard.data(forKey: customPresetsKey),
+      let presets = try? JSONDecoder().decode([String: [Double]].self, from: data)
+    else {
+      return []
+    }
+
+    let result = presets.map { name, gains in
+      EqualizerPreset(name: name, gains: gains, type: .custom)
+    }
+    cachedCustomPresets = result
+    return result
+  }
+
+  func applyPreset(_ presetName: String) -> Bool {
+    // Try built-in preset first
+    if let gains = Self.builtInPresets[presetName] {
+      if setAllBandGains(gains) {
+        currentPresetName = presetName
+        notifyPresetChange(presetName)
+        saveCurrentPreset(presetName)
+        return true
+      }
+    }
+
+    // Try custom preset
+    if let gains = getCustomPresetGains(presetName) {
+      if setAllBandGains(gains) {
+        currentPresetName = presetName
+        notifyPresetChange(presetName)
+        saveCurrentPreset(presetName)
+        return true
+      }
+    }
+
+    return false
+  }
+
+  private func getCustomPresetGains(_ name: String) -> [Double]? {
+    guard let data = UserDefaults.standard.data(forKey: customPresetsKey),
+      let presets = try? JSONDecoder().decode([String: [Double]].self, from: data)
+    else {
+      return nil
+    }
+    return presets[name]
+  }
+
+  func getCurrentPresetName() -> String? {
+    return currentPresetName
+  }
+
+  func saveCustomPreset(_ name: String) -> Bool {
+    var presets: [String: [Double]] = [:]
+
+    if let data = UserDefaults.standard.data(forKey: customPresetsKey),
+      let existing = try? JSONDecoder().decode([String: [Double]].self, from: data)
+    {
+      presets = existing
+    }
+
+    presets[name] = currentGains
+
+    if let data = try? JSONEncoder().encode(presets) {
+      UserDefaults.standard.set(data, forKey: customPresetsKey)
+      cachedCustomPresets = nil
+      currentPresetName = name
+      notifyPresetChange(name)
+      saveCurrentPreset(name)
+      return true
+    }
+
+    return false
+  }
+
+  func deleteCustomPreset(_ name: String) -> Bool {
+    guard
+      var presets: [String: [Double]] = {
+        guard let data = UserDefaults.standard.data(forKey: customPresetsKey),
+          let existing = try? JSONDecoder().decode([String: [Double]].self, from: data)
+        else {
+          return nil
+        }
+        return existing
+      }()
+    else {
+      return false
+    }
+
+    guard presets[name] != nil else { return false }
+
+    presets.removeValue(forKey: name)
+
+    if let data = try? JSONEncoder().encode(presets) {
+      UserDefaults.standard.set(data, forKey: customPresetsKey)
+      cachedCustomPresets = nil
+
+      if currentPresetName == name {
+        currentPresetName = nil
+        notifyPresetChange(nil)
+        saveCurrentPreset(nil)
+      }
+      return true
+    }
+
+    return false
+  }
+
+  func getState() -> EqualizerState {
+    let presetVariant: Variant_NullType_String?
+    if let name = currentPresetName {
+      presetVariant = .second(name)
+    } else {
+      presetVariant = .first(NullType.null)
+    }
+
+    return EqualizerState(
+      enabled: isEqualizerEnabled,
+      bands: getBands(),
+      currentPreset: presetVariant
+    )
+  }
+
+  func reset() {
+    _ = setAllBandGains([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    currentPresetName = "Flat"
+    notifyPresetChange("Flat")
+    saveCurrentPreset("Flat")
+  }
+
+  // MARK: - Persistence
+
+  private func saveEnabled(_ enabled: Bool) {
+    UserDefaults.standard.set(enabled, forKey: enabledKey)
+  }
+
+  private func saveBandGains(_ gains: [Double]) {
+    if let data = try? JSONEncoder().encode(gains) {
+      UserDefaults.standard.set(data, forKey: bandGainsKey)
+    }
+  }
+
+  private func saveCurrentPreset(_ name: String?) {
+    UserDefaults.standard.set(name, forKey: currentPresetKey)
+  }
+
+  private func restoreSettings() {
+    let enabled = UserDefaults.standard.bool(forKey: enabledKey)
+
+    if let data = UserDefaults.standard.data(forKey: bandGainsKey),
+      let gains = try? JSONDecoder().decode([Double].self, from: data),
+      gains.count == 10
+    {
+      currentGains = gains
+    }
+    // else: migration from 5-band or fresh install — start at flat (currentGains already zeroed)
+
+    currentPresetName = UserDefaults.standard.string(forKey: currentPresetKey)
+    isEqualizerEnabled = enabled
+
+    NitroPlayerLogger.log("EqualizerCore", "✅ Restored settings - enabled: \(enabled), gains: \(currentGains)")
+  }
+
+  // MARK: - Listener Management (v2 — stable IDs)
+
+  @discardableResult func addOnEnabledChangeListener(_ callback: @escaping (Bool) -> Void) -> Int64 {
+    onEnabledChangeListeners.add(callback)
+  }
+  @discardableResult func removeOnEnabledChangeListener(id: Int64) -> Bool {
+    onEnabledChangeListeners.remove(id: id)
+  }
+
+  @discardableResult func addOnBandChangeListener(_ callback: @escaping ([EqualizerBand]) -> Void) -> Int64 {
+    onBandChangeListeners.add(callback)
+  }
+  @discardableResult func removeOnBandChangeListener(id: Int64) -> Bool {
+    onBandChangeListeners.remove(id: id)
+  }
+
+  @discardableResult func addOnPresetChangeListener(_ callback: @escaping (Variant_NullType_String?) -> Void) -> Int64 {
+    onPresetChangeListeners.add(callback)
+  }
+  @discardableResult func removeOnPresetChangeListener(id: Int64) -> Bool {
+    onPresetChangeListeners.remove(id: id)
+  }
+
+  private func notifyEnabledChange(_ enabled: Bool) {
+    onEnabledChangeListeners.forEach { $0(enabled) }
+  }
+
+  private func notifyBandChange(_ bands: [EqualizerBand]) {
+    onBandChangeListeners.forEach { $0(bands) }
+  }
+
+  private func notifyPresetChange(_ presetName: String?) {
+    let variant: Variant_NullType_String? = presetName.map { .second($0) }
+    onPresetChangeListeners.forEach { $0(variant) }
+  }
+}
+
+// MARK: - MTAudioProcessingTap Context
+
+/// Context passed to the audio processing tap
+private class TapContext {
+  weak var eqCore: EqualizerCore?
+  var sampleRate: Float = 44100.0
+  var channelCount: Int = 2
+
+  // Biquad filter states for 10 bands
+  // Each band needs 4 delay elements per channel (x[n-1], x[n-2], y[n-1], y[n-2])
+  var filterStates: [[Float]] = []
+
+  // Biquad coefficients for 10 bands
+  // Each band: [b0, b1, b2, a1, a2] (normalized, a0 = 1)
+  var filterCoeffs: [[Double]] = []
+
+  init(eqCore: EqualizerCore) {
+    self.eqCore = eqCore
+    // Initialize 10 bands with flat coefficients
+    for _ in 0..<10 {
+      filterCoeffs.append([1.0, 0.0, 0.0, 0.0, 0.0])  // Flat/bypass
+    }
+  }
+
+  func updateCoefficients() {
+    guard let eqCore = eqCore else { return }
+    let frequencies: [Float] = [31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000]
+    let gains = eqCore.currentGains
+
+    for i in 0..<10 {
+      filterCoeffs[i] = calculatePeakingEQCoefficients(
+        frequency: Double(frequencies[i]),
+        gain: gains[i],
+        q: 1.41,  // Standard Q for graphic EQ
+        sampleRate: Double(sampleRate)
+      )
+    }
+    eqCore.gainsDirty = false
+  }
+
+  /// Calculate biquad coefficients for a peaking EQ filter
+  private func calculatePeakingEQCoefficients(
+    frequency: Double, gain: Double, q: Double, sampleRate: Double
+  ) -> [Double] {
+    // If gain is essentially 0, return bypass coefficients
+    let absGain: Double = Swift.abs(gain)
+    if absGain < 0.01 {
+      return [1.0, 0.0, 0.0, 0.0, 0.0]
+    }
+
+    let A = pow(10.0, gain / 40.0)  // sqrt(10^(gain/20))
+    let omega = 2.0 * Double.pi * frequency / sampleRate
+    let sinOmega = sin(omega)
+    let cosOmega = cos(omega)
+    let alpha = sinOmega / (2.0 * q)
+
+    let b0 = 1.0 + alpha * A
+    let b1 = -2.0 * cosOmega
+    let b2 = 1.0 - alpha * A
+    let a0 = 1.0 + alpha / A
+    let a1 = -2.0 * cosOmega
+    let a2 = 1.0 - alpha / A
+
+    // Normalize by a0
+    return [b0 / a0, b1 / a0, b2 / a0, a1 / a0, a2 / a0]
+  }
+
+  func resetFilterStates() {
+    filterStates = []
+    for _ in 0..<10 {
+      // 4 delay elements per channel (2 for input history, 2 for output history)
+      filterStates.append(Array(repeating: Float(0.0), count: channelCount * 4))
+    }
+  }
+}
+
+// MARK: - MTAudioProcessingTap Callbacks
+
+private func tapInitCallback(
+  tap: MTAudioProcessingTap,
+  clientInfo: UnsafeMutableRawPointer?,
+  tapStorageOut: UnsafeMutablePointer<UnsafeMutableRawPointer?>
+) {
+  guard let clientInfo = clientInfo else { return }
+
+  let eqCore = Unmanaged<EqualizerCore>.fromOpaque(clientInfo).takeUnretainedValue()
+  let context = TapContext(eqCore: eqCore)
+  tapStorageOut.pointee = Unmanaged.passRetained(context).toOpaque()
+
+  NitroPlayerLogger.log("EqualizerCore", "🎛️ Tap initialized")
+}
+
+private func tapFinalizeCallback(tap: MTAudioProcessingTap) {
+  let storage = MTAudioProcessingTapGetStorage(tap)
+  Unmanaged<TapContext>.fromOpaque(storage).release()
+  NitroPlayerLogger.log("EqualizerCore", "🎛️ Tap finalized")
+}
+
+private func tapPrepareCallback(
+  tap: MTAudioProcessingTap,
+  maxFrames: CMItemCount,
+  processingFormat: UnsafePointer<AudioStreamBasicDescription>
+) {
+  let storage = MTAudioProcessingTapGetStorage(tap)
+  let context = Unmanaged<TapContext>.fromOpaque(storage).takeUnretainedValue()
+
+  context.sampleRate = Float(processingFormat.pointee.mSampleRate)
+  context.channelCount = Int(processingFormat.pointee.mChannelsPerFrame)
+  context.updateCoefficients()
+  context.resetFilterStates()
+
+    NitroPlayerLogger.log("EqualizerCore", "🎛️ Tap prepared - sampleRate: \(context.sampleRate), channels: \(context.channelCount)")
+}
+
+private func tapUnprepareCallback(tap: MTAudioProcessingTap) {
+  NitroPlayerLogger.log("EqualizerCore", "🎛️ Tap unprepared")
+}
+
+private func tapProcessCallback(
+  tap: MTAudioProcessingTap,
+  numberFrames: CMItemCount,
+  flags: MTAudioProcessingTapFlags,
+  bufferListInOut: UnsafeMutablePointer<AudioBufferList>,
+  numberFramesOut: UnsafeMutablePointer<CMItemCount>,
+  flagsOut: UnsafeMutablePointer<MTAudioProcessingTapFlags>
+) {
+  let storage = MTAudioProcessingTapGetStorage(tap)
+  let context = Unmanaged<TapContext>.fromOpaque(storage).takeUnretainedValue()
+
+  // Get source audio
+  var sourceFlags = MTAudioProcessingTapFlags()
+  let status = MTAudioProcessingTapGetSourceAudio(
+    tap,
+    numberFrames,
+    bufferListInOut,
+    &sourceFlags,
+    nil,
+    numberFramesOut
+  )
+
+  guard status == noErr else {
+    NitroPlayerLogger.log("EqualizerCore", "❌ Failed to get source audio: \(status)")
+    return
+  }
+
+  // Check if equalizer is enabled
+  guard let eqCore = context.eqCore, eqCore.isEqualizerEnabled else {
+    // Bypass - audio is already in bufferListInOut
+    return
+  }
+
+  // Update coefficients only when gains have changed
+  if context.eqCore?.gainsDirty == true {
+    context.updateCoefficients()
+  }
+
+  // Process each buffer (channel)
+  let bufferList = UnsafeMutableAudioBufferListPointer(bufferListInOut)
+
+  for bufferIndex in 0..<bufferList.count {
+    guard let data = bufferList[bufferIndex].mData else { continue }
+
+    let frameCount = Int(numberFramesOut.pointee)
+    let samples = data.assumingMemoryBound(to: Float.self)
+
+    // Apply all 10 EQ bands in series
+    for bandIndex in 0..<10 {
+      let coeffs: [Double] = context.filterCoeffs[bandIndex]
+
+      // Skip if essentially flat
+      let c0: Double = coeffs[0]
+      let c1: Double = coeffs[1]
+      let c2: Double = coeffs[2]
+      if Swift.abs(c0 - 1.0) < 0.001 && Swift.abs(c1) < 0.001 && Swift.abs(c2) < 0.001 {
+        continue
+      }
+
+      // Ensure we have enough filter states for this channel
+      guard bufferIndex * 4 + 3 < context.filterStates[bandIndex].count else {
+        continue
+      }
+
+      // Get filter state for this band and channel
+      let stateOffset = bufferIndex * 4
+      var x1 = context.filterStates[bandIndex][stateOffset]
+      var x2 = context.filterStates[bandIndex][stateOffset + 1]
+      var y1 = context.filterStates[bandIndex][stateOffset + 2]
+      var y2 = context.filterStates[bandIndex][stateOffset + 3]
+
+      let b0 = Float(coeffs[0])
+      let b1 = Float(coeffs[1])
+      let b2 = Float(coeffs[2])
+      let a1 = Float(coeffs[3])
+      let a2 = Float(coeffs[4])
+
+      // Process samples using Direct Form II transposed
+      for i in 0..<frameCount {
+        let x = samples[i]
+        let y = b0 * x + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2
+
+        x2 = x1
+        x1 = x
+        y2 = y1
+        y1 = y
+
+        samples[i] = y
+      }
+
+      // Save filter state
+      context.filterStates[bandIndex][stateOffset] = x1
+      context.filterStates[bandIndex][stateOffset + 1] = x2
+      context.filterStates[bandIndex][stateOffset + 2] = y1
+      context.filterStates[bandIndex][stateOffset + 3] = y2
+    }
+  }
+}
